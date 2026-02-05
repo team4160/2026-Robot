@@ -44,7 +44,7 @@ public class Vision {
 
 	/** April Tag Field Layout of the year. */
 	public static final AprilTagFieldLayout fieldLayout = AprilTagFieldLayout.loadField(
-		AprilTagFields.k2025ReefscapeAndyMark
+		AprilTagFields.k2026RebuiltWelded
 	);
 
 	/** Ambiguity defined as a value between (0,1). Used in {@link Vision#filterPose}. */
@@ -109,13 +109,11 @@ public class Vision {
 	public void updatePoseEstimation(SwerveDrive swerveDrive) {
 		if (SwerveDriveTelemetry.isSimulation && swerveDrive.getSimulationDriveTrainPose().isPresent()) {
 			/*
-			 * In the maple-sim, odometry is simulated using encoder values, accounting for
-			 * factors like skidding and drifting. As a result, the odometry may not always
-			 * be 100% accurate. However, the vision system should be able to provide a
-			 * reasonably accurate pose estimation, even when odometry is incorrect. (This
-			 * is why teams implement vision system to correct odometry.) Therefore, we must
-			 * ensure that the actual robot pose is provided in the simulator when updating
-			 * the vision simulation during the simulation.
+			 * In the maple-sim, odometry is simulated using encoder values, accounting for factors like skidding and drifting.
+			 * As a result, the odometry may not always be 100% accurate.
+			 * However, the vision system should be able to provide a reasonably accurate pose estimation, even when odometry is incorrect.
+			 * (This is why teams implement vision system to correct odometry.)
+			 * Therefore, we must ensure that the actual robot pose is provided in the simulator when updating the vision simulation during the simulation.
 			 */
 			visionSim.update(swerveDrive.getSimulationDriveTrainPose().get());
 		}
@@ -156,6 +154,13 @@ public class Vision {
 			);
 		}
 		return poseEst;
+	}
+
+	public boolean hasTargets() {
+		for (Cameras camera : Cameras.values()) {
+			if (getEstimatedGlobalPose(camera) != null) return true;
+		}
+		return false;
 	}
 
 	/**
@@ -243,15 +248,15 @@ public class Vision {
 	 */
 	private void openSimCameraViews() {
 		if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
-			// try
-			// {
-			// Desktop.getDesktop().browse(new URI("http://localhost:1182/"));
-			// Desktop.getDesktop().browse(new URI("http://localhost:1184/"));
-			// Desktop.getDesktop().browse(new URI("http://localhost:1186/"));
-			// } catch (IOException | URISyntaxException e)
-			// {
-			// e.printStackTrace();
-			// }
+			//      try
+			//      {
+			//        Desktop.getDesktop().browse(new URI("http://localhost:1182/"));
+			//        Desktop.getDesktop().browse(new URI("http://localhost:1184/"));
+			//        Desktop.getDesktop().browse(new URI("http://localhost:1186/"));
+			//      } catch (IOException | URISyntaxException e)
+			//      {
+			//        e.printStackTrace();
+			//      }
 		}
 	}
 
@@ -282,32 +287,30 @@ public class Vision {
 	enum Cameras {
 		/** Left Camera */
 		LEFT_CAM(
-			"left",
-			new Rotation3d(0, Math.toRadians(-24.094), Math.toRadians(30)),
-			new Translation3d(Units.inchesToMeters(12.056), Units.inchesToMeters(10.981), Units.inchesToMeters(8.44)),
+			"FrontLeft",
+			new Rotation3d(0, Math.toRadians(0), Math.toRadians(19.5)),
+			new Translation3d(Units.inchesToMeters(13.25), -Units.inchesToMeters(13.25), Units.inchesToMeters(9.22)),
 			VecBuilder.fill(4, 4, 8),
 			VecBuilder.fill(0.5, 0.5, 1)
 		),
 		/** Right Camera */
 		RIGHT_CAM(
-			"right",
-			new Rotation3d(0, Math.toRadians(-24.094), Math.toRadians(-30)),
-			new Translation3d(Units.inchesToMeters(12.056), Units.inchesToMeters(-10.981), Units.inchesToMeters(8.44)),
-			VecBuilder.fill(4, 4, 8),
-			VecBuilder.fill(0.5, 0.5, 1)
-		),
-		/** Center Camera */
-		CENTER_CAM(
-			"center",
-			new Rotation3d(0, Units.degreesToRadians(18), 0),
-			new Translation3d(
-				Units.inchesToMeters(-4.628),
-				Units.inchesToMeters(-10.687),
-				Units.inchesToMeters(16.129)
-			),
+			"FrontRight",
+			new Rotation3d(0, Math.toRadians(0), -Math.toRadians(19.5)),
+			new Translation3d(Units.inchesToMeters(13.25), Units.inchesToMeters(13.25), Units.inchesToMeters(9.22)),
 			VecBuilder.fill(4, 4, 8),
 			VecBuilder.fill(0.5, 0.5, 1)
 		);
+
+		// /**
+		//  * Center Camera
+		//  */
+		// CENTER_CAM("center",
+		//            new Rotation3d(0, Units.degreesToRadians(18), 0),
+		//            new Translation3d(Units.inchesToMeters(-4.628),
+		//                              Units.inchesToMeters(-10.687),
+		//                              Units.inchesToMeters(16.129)),
+		//            VecBuilder.fill(4, 4, 8), VecBuilder.fill(0.5, 0.5, 1));
 
 		/** Latency alert to use when high latency is detected. */
 		public final Alert latencyAlert;

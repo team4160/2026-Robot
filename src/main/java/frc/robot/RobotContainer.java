@@ -23,6 +23,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.commands.ShootOnTheMoveCommand;
 import frc.robot.constants.IntakeConstants;
 import frc.robot.constants.OperatorConstants;
 import frc.robot.subsystems.IntakeSubsystem;
@@ -31,6 +32,7 @@ import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.SpindexerSubsystem;
 import frc.robot.subsystems.SwerveSubsystem;
 import frc.robot.subsystems.TurretSubsystem;
+import frc.robot.systems.ScoringSystem;
 import java.io.File;
 import swervelib.SwerveInputStream;
 
@@ -44,7 +46,7 @@ public class RobotContainer {
 
 	// Controllers and Button Board
 	final CommandXboxController driverXbox = new CommandXboxController(0);
-	final CommandXboxController operatorControler = new CommandXboxController(1);
+	final CommandXboxController operatorXbox = new CommandXboxController(1);
 
 	// The robot's subsystems and commands are defined here...
 	private final SwerveSubsystem drivebase = new SwerveSubsystem(
@@ -54,17 +56,15 @@ public class RobotContainer {
 	// Establish a Sendable Chooser that will be able to be sent to the SmartDashboard, allowing selection of desired auto
 	private final SendableChooser<Command> autoChooser;
 
-	// private final ClimberSubsystem climber = new ClimberSubsystem();
-
-	private final IntakeSubsystem bottomintake = new IntakeSubsystem();
+	private final IntakeSubsystem intake = new IntakeSubsystem();
 
 	private final ShooterSubsystem shooter = new ShooterSubsystem();
 	private final TurretSubsystem turret = new TurretSubsystem();
 
 	private final SpindexerSubsystem spindexer = new SpindexerSubsystem();
-	private final KickerSubsystem feeder = new KickerSubsystem();
+	private final KickerSubsystem kicker = new KickerSubsystem();
 
-	// private final ArmSubsystem arm = new ArmSubsystem();
+	final ScoringSystem scoringSystem = new ScoringSystem(shooter, turret, drivebase);
 
 	/**
 	 * Converts driver input into a field-relative ChassisSpeeds that is controlled by angular
@@ -158,17 +158,15 @@ public class RobotContainer {
 			drivebase.setDefaultCommand(driveFieldOrientedAnglularVelocity);
 		}
 
-		bottomintake.setDefaultCommand(bottomintake.set(0));
+		intake.setDefaultCommand(intake.set(0));
 
 		shooter.setDefaultCommand(shooter.set(0));
 
 		spindexer.setDefaultCommand(spindexer.set(0));
 
-		feeder.setDefaultCommand(feeder.set(0));
+		kicker.setDefaultCommand(kicker.set(0));
 
 		turret.setDefaultCommand(turret.set(0));
-
-		// arm.setDefaultCommand(arm.setAngle(Degrees.of(0)));
 
 		if (Robot.isSimulation()) {
 			Pose2d target = new Pose2d(new Translation2d(1, 4), Rotation2d.fromDegrees(90));
@@ -204,18 +202,24 @@ public class RobotContainer {
 			driverXbox.a().onTrue((Commands.runOnce(drivebase::zeroGyro)));
 			driverXbox.y().whileTrue(Commands.runOnce(drivebase::lock, drivebase).repeatedly());
 		}
-		// driverXbox.rightBumper().whileTrue(climber.c_climb());
-		// driverXbox.rightTrigger().whileTrue(climber.c_climbReverse());
 
-		operatorControler.a().whileTrue(bottomintake.set(-IntakeConstants.kIntakeDutyCycle));
+		driverXbox
+			.x()
+			.toggleOnTrue(
+				new ShootOnTheMoveCommand(drivebase, scoringSystem, () -> scoringSystem.getAimPoint()).withName(
+					"OperatorControls.aimCommand"
+				)
+			);
 
-		operatorControler.y().whileTrue(shooter.setVelocity(RPM.of(6250)));
+		operatorXbox.a().whileTrue(intake.set(-IntakeConstants.kIntakeDutyCycle));
 
-		operatorControler.b().whileTrue(spindexer.set(-.85).alongWith(feeder.set(-0.25)));
+		operatorXbox.y().whileTrue(shooter.setVelocity(RPM.of(6250)));
 
-		operatorControler.rightTrigger().whileTrue(turret.set(.3));
+		operatorXbox.b().whileTrue(spindexer.set(-.85).alongWith(kicker.set(-0.25)));
 
-		operatorControler.leftTrigger().whileTrue(turret.set(-.3));
+		operatorXbox.rightTrigger().whileTrue(turret.set(.3));
+
+		operatorXbox.leftTrigger().whileTrue(turret.set(-.3));
 		// operatorControler.leftBumper().whileTrue(turret.sysId());
 	}
 

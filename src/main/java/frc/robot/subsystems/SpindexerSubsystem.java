@@ -9,13 +9,13 @@ import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Pounds;
 import static edu.wpi.first.units.Units.RPM;
 
-import com.revrobotics.spark.SparkFlex;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.constants.HopperConstants;
 import yams.gearing.GearBox;
 import yams.gearing.MechanismGearing;
 import yams.mechanisms.config.FlyWheelConfig;
@@ -25,11 +25,12 @@ import yams.motorcontrollers.SmartMotorControllerConfig;
 import yams.motorcontrollers.SmartMotorControllerConfig.ControlMode;
 import yams.motorcontrollers.SmartMotorControllerConfig.MotorMode;
 import yams.motorcontrollers.SmartMotorControllerConfig.TelemetryVerbosity;
-import yams.motorcontrollers.local.SparkWrapper;
+import yams.motorcontrollers.remote.TalonFXWrapper;
 
 public class SpindexerSubsystem extends SubsystemBase {
 
-	private SparkFlex spark = new SparkFlex(16, MotorType.kBrushless);
+	// Vendor motor controller object
+	private TalonFX spark = new TalonFX(HopperConstants.kSpindexer_ID);
 
 	private SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
 		.withControlMode(ControlMode.CLOSED_LOOP)
@@ -51,12 +52,8 @@ public class SpindexerSubsystem extends SubsystemBase {
 		.withIdleMode(MotorMode.BRAKE)
 		.withStatorCurrentLimit(Amps.of(40));
 
-	// Vendor motor controller object
-
-	// Create our SmartMotorController from our Spark and config with the NEO.
-	private SmartMotorController motor = new SparkWrapper(spark, DCMotor.getNEO(1), smcConfig);
-	// private SmartMotorController motor2 = new SparkWrapper(spark,
-	// DCMotor.getNEO(1), smcConfig);
+	// Create our SmartMotorController
+	private SmartMotorController motor = new TalonFXWrapper(spark, DCMotor.getFalcon500(1), smcConfig);
 
 	private final FlyWheelConfig shooterConfig = new FlyWheelConfig(motor)
 		// Diameter of the flywheel.
@@ -101,11 +98,7 @@ public class SpindexerSubsystem extends SubsystemBase {
 	}
 
 	/** Creates a new ExampleSubsystem. */
-	public SpindexerSubsystem() {
-		// spark2.configure(climberConfigs.shooterConfig,
-		// ResetMode.kResetSafeParameters,
-		// PersistMode.kPersistParameters);
-	}
+	public SpindexerSubsystem() {}
 
 	/**
 	 * Example command factory method.

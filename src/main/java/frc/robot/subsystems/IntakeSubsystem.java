@@ -9,8 +9,7 @@ import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Pounds;
 import static edu.wpi.first.units.Units.RPM;
 
-import com.revrobotics.spark.SparkFlex;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -26,9 +25,12 @@ import yams.motorcontrollers.SmartMotorControllerConfig;
 import yams.motorcontrollers.SmartMotorControllerConfig.ControlMode;
 import yams.motorcontrollers.SmartMotorControllerConfig.MotorMode;
 import yams.motorcontrollers.SmartMotorControllerConfig.TelemetryVerbosity;
-import yams.motorcontrollers.local.SparkWrapper;
+import yams.motorcontrollers.remote.TalonFXWrapper;
 
 public class IntakeSubsystem extends SubsystemBase {
+
+	// Vendor motor controller object
+	private TalonFX Intake = new TalonFX(IntakeConstants.kIntake_ID);
 
 	private SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
 		.withControlMode(ControlMode.CLOSED_LOOP)
@@ -50,11 +52,8 @@ public class IntakeSubsystem extends SubsystemBase {
 		.withIdleMode(MotorMode.COAST)
 		.withStatorCurrentLimit(Amps.of(40));
 
-	// Vendor motor controller object
-	private SparkFlex Intake = new SparkFlex(IntakeConstants.kIntake_ID, MotorType.kBrushless);
-
-	// Create our SmartMotorController from our Spark and config with the NEO.
-	private SmartMotorController IntakeMotor = new SparkWrapper(Intake, DCMotor.getNEO(1), smcConfig);
+	// Create our SmartMotorController
+	private SmartMotorController IntakeMotor = new TalonFXWrapper(Intake, DCMotor.getKrakenX60(1), smcConfig);
 
 	private final FlyWheelConfig IntakeConfig = new FlyWheelConfig(IntakeMotor)
 		// Diameter of the flywheel.

@@ -9,8 +9,7 @@ import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Pounds;
 import static edu.wpi.first.units.Units.RPM;
 
-import com.revrobotics.spark.SparkFlex;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -18,6 +17,7 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.ShooterConstants;
+import java.util.function.Supplier;
 import yams.gearing.GearBox;
 import yams.gearing.MechanismGearing;
 import yams.mechanisms.config.FlyWheelConfig;
@@ -27,12 +27,13 @@ import yams.motorcontrollers.SmartMotorControllerConfig;
 import yams.motorcontrollers.SmartMotorControllerConfig.ControlMode;
 import yams.motorcontrollers.SmartMotorControllerConfig.MotorMode;
 import yams.motorcontrollers.SmartMotorControllerConfig.TelemetryVerbosity;
-import yams.motorcontrollers.local.SparkWrapper;
+import yams.motorcontrollers.remote.TalonFXWrapper;
 
 public class ShooterSubsystem extends SubsystemBase {
 
-	private SparkFlex shooterLeader = new SparkFlex(ShooterConstants.kShooterLeader_ID, MotorType.kBrushless);
-	private SparkFlex shooterFollower = new SparkFlex(ShooterConstants.kShooterFollower_ID, MotorType.kBrushless);
+	// Vendor motor controller object
+	private TalonFX shooterLeader = new TalonFX(ShooterConstants.kShooterLeader_ID);
+	private TalonFX shooterFollower = new TalonFX(ShooterConstants.kShooterFollower_ID);
 
 	private SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
 		.withControlMode(ControlMode.CLOSED_LOOP)
@@ -55,10 +56,12 @@ public class ShooterSubsystem extends SubsystemBase {
 		.withStatorCurrentLimit(Amps.of(40))
 		.withFollowers(Pair.of(shooterFollower, true));
 
-	// Vendor motor controller object
-
-	// Create our SmartMotorController from our Spark and config with the NEO.
-	private SmartMotorController shooterLeaderMotor = new SparkWrapper(shooterLeader, DCMotor.getNEO(1), smcConfig);
+	// Create our SmartMotorController
+	private SmartMotorController shooterLeaderMotor = new TalonFXWrapper(
+		shooterLeader,
+		DCMotor.getKrakenX60(2),
+		smcConfig
+	);
 
 	private final FlyWheelConfig shooterConfig = new FlyWheelConfig(shooterLeaderMotor)
 		// Diameter of the flywheel.
@@ -92,6 +95,14 @@ public class ShooterSubsystem extends SubsystemBase {
 		return shooter.setSpeed(speed);
 	}
 
+	public Command setVelocityDynamic(Supplier<AngularVelocity> speed) {
+		return shooter.setSpeed(speed);
+	}
+
+	public AngularVelocity getSpeed() {
+		return shooter.getSpeed();
+	}
+
 	/**
 	 * Set the dutycycle of the shooter.
 	 *
@@ -103,11 +114,7 @@ public class ShooterSubsystem extends SubsystemBase {
 	}
 
 	/** Creates a new ExampleSubsystem. */
-	public ShooterSubsystem() {
-		// spark2.configure(climberConfigs.shooterConfig,
-		// ResetMode.kResetSafeParameters,
-		// PersistMode.kPersistParameters);
-	}
+	public ShooterSubsystem() {}
 
 	@Override
 	public void periodic() {

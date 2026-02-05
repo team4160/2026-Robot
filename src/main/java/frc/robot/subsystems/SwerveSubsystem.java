@@ -19,6 +19,7 @@ import com.pathplanner.lib.util.swerve.SwerveSetpoint;
 import com.pathplanner.lib.util.swerve.SwerveSetpointGenerator;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -238,6 +239,21 @@ public class SwerveSubsystem extends SubsystemBase {
 			constraints,
 			edu.wpi.first.units.Units.MetersPerSecond.of(0) // Goal end velocity in meters/sec
 		);
+	}
+
+	/**
+	 * Implement the driveToPose command that uses PathPlanner Path finding to go to a point on the
+	 * field as a defered commmand.
+	 *
+	 * @param pose Target {@link Pose2d} to go to.
+	 * @return PathFinding command
+	 */
+	public Command driveToPose(Supplier<Pose2d> pose) {
+		return defer(() -> driveToPose(pose.get()));
+	}
+
+	public Command driveToSetPoint(double x, double y, double angle) {
+		return driveToPose(new Pose2d(new Translation2d(Meter.of(x), Meter.of(y)), Rotation2d.fromDegrees(angle)));
 	}
 
 	/**
@@ -492,6 +508,16 @@ public class SwerveSubsystem extends SubsystemBase {
 	 */
 	public void resetOdometry(Pose2d initialHolonomicPose) {
 		swerveDrive.resetOdometry(initialHolonomicPose);
+	}
+
+	/**
+	 * Gets the current 3d pose (position and rotation) of the robot, as reported by odometry.
+	 * Transforms into a 3d pose assuming on the XY plane.
+	 *
+	 * @return
+	 */
+	public Pose3d getPose3d() {
+		return new Pose3d(swerveDrive.getPose());
 	}
 
 	/**
