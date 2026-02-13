@@ -21,9 +21,9 @@ public class DrivebaseConstants {
 	// Hold time on motor brakes when disabled
 	public static double WHEEL_LOCK_TIME = 10; // seconds
 
-	public static double ROBOT_MASS = (148 - 20.3) * 0.453592; // 32lbs * kg per pound
-	public static Matter CHASSIS = new Matter(new Translation3d(0, 0, Units.inchesToMeters(8)), ROBOT_MASS);
-	public static double LOOP_TIME = 0.13; // s, 20ms + 110ms sprk max velocity lag
-	public static double MAX_SPEED = 5.331370317;
+	public static final double ROBOT_MASS = (148 - 20.3) * 0.453592; // 32lbs * kg per pound
+	public static final Matter CHASSIS = new Matter(new Translation3d(0, 0, Units.inchesToMeters(8)), ROBOT_MASS);
+	public static final double LOOP_TIME = 0.13; // s, 20ms + 110ms sprk max velocity lag
+	public static final double MAX_SPEED = 5.331370317;
 	// Maximum speed of the robot in meters per second, used to limit acceleration.
 }

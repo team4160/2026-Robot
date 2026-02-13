@@ -28,6 +28,8 @@ import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -70,16 +72,23 @@ public class SwerveSubsystem extends SubsystemBase {
 	 * @param directory Directory of swerve drive config files.
 	 */
 	public SwerveSubsystem(File directory) {
-		boolean blueAlliance = false;
-		Pose2d startingPose = blueAlliance
-			? new Pose2d(new Translation2d(Meter.of(1), Meter.of(4)), Rotation2d.fromDegrees(0))
-			: new Pose2d(new Translation2d(Meter.of(16), Meter.of(4)), Rotation2d.fromDegrees(180));
+		// boolean blueAlliance = false;
+		// Pose2d startingPose = blueAlliance
+		// 	? new Pose2d(new Translation2d(Meter.of(1), Meter.of(4)), Rotation2d.fromDegrees(0))
+		// 	: new Pose2d(new Translation2d(Meter.of(16), Meter.of(4)), Rotation2d.fromDegrees(180));
 		// Configure the Telemetry before creating the SwerveDrive to avoid unnecessary objects being created.
 		SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
 		try {
-			swerveDrive = new SwerveParser(directory).createSwerveDrive(DrivebaseConstants.MAX_SPEED, startingPose);
+			// swerveDrive = new SwerveParser(directory).createSwerveDrive(DrivebaseConstants.MAX_SPEED, startingPose);
 			// Alternative method if you don't want to supply the conversion factor via JSON files.
-			// swerveDrive = new SwerveParser(directory).createSwerveDrive(maximumSpeed, angleConversionFactor, driveConversionFactor);
+			SendableChooser<Integer> gearRatio = new SendableChooser<>();
+			gearRatio.setDefaultOption("R1", 12);
+			gearRatio.addOption("R2", 14);
+			gearRatio.addOption("R3", 16);
+			double angleConversionFactor = SwerveMath.calculateDegreesPerSteeringRotation(287/11);
+			double driveConversionFactor = SwerveMath.calculateMetersPerRotation(Units.inchesToMeters(4), (54/gearRatio.getSelected())*(25/32)*(30/15));
+			swerveDrive = new SwerveParser(directory).createSwerveDrive(DrivebaseConstants.MAX_SPEED, angleConversionFactor, driveConversionFactor);
+			gearRatio.close();
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
