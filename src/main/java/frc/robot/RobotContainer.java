@@ -14,6 +14,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -72,8 +73,8 @@ public class RobotContainer {
 	 */
 	SwerveInputStream driveAngularVelocity = SwerveInputStream.of(
 		drivebase.getSwerveDrive(),
-		() -> driverXbox.getLeftY() * -1,
-		() -> driverXbox.getLeftX() * -1
+		() -> driverXbox.getLeftY(),
+		() -> driverXbox.getLeftX()
 	)
 		.withControllerRotationAxis(() -> driverXbox.getRightX() * -1)
 		.deadband(OperatorConstants.DEADBAND)
@@ -117,15 +118,13 @@ public class RobotContainer {
 		// Configure the trigger bindings
 		configureBindings();
 		DriverStation.silenceJoystickConnectionWarning(true);
+		DataLogManager.start();
 
 		// Create the NamedCommands that will be used in PathPlanner
 		NamedCommands.registerCommand("test", Commands.print("I EXIST"));
 
 		// Have the autoChooser pull in all PathPlanner autos as options
 		autoChooser = AutoBuilder.buildAutoChooser();
-
-		// Set the default auto (do nothing)
-		autoChooser.setDefaultOption("Do Nothing", Commands.none());
 
 		// Add a simple auto option to have the robot drive forward for 1 second then stop
 		autoChooser.addOption("Drive Forward", drivebase.driveForward().withTimeout(1));

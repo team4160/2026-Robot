@@ -12,6 +12,7 @@ import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 
 import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.hardware.CANcoder;
@@ -25,6 +26,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.TurretConstants;
+import java.util.Optional;
 import java.util.function.Supplier;
 import yams.gearing.GearBox;
 import yams.gearing.MechanismGearing;
@@ -37,10 +39,10 @@ import yams.motorcontrollers.SmartMotorControllerConfig.ControlMode;
 import yams.motorcontrollers.SmartMotorControllerConfig.MotorMode;
 import yams.motorcontrollers.SmartMotorControllerConfig.TelemetryVerbosity;
 import yams.motorcontrollers.remote.TalonFXWrapper;
-import yams.telemetry.SmartMotorControllerTelemetryConfig;
 import yams.units.EasyCRT;
 import yams.units.EasyCRT.CRTStatus;
 import yams.units.EasyCRTConfig;
+import yams.units.EasyCRTConfig.CrtGearPair;
 
 /** Turret that uses YAMS CRT */
 public class TurretSubsystem extends SubsystemBase {
@@ -49,7 +51,6 @@ public class TurretSubsystem extends SubsystemBase {
 	private static final String RERUN_SEED = "Turret/CRT/RerunSeed";
 
 	private final TalonFX turretMotor;
-	private final SmartMotorControllerTelemetryConfig motorTelemetryConfig;
 	private final SmartMotorControllerConfig motorConfig;
 	private final SmartMotorController motor;
 	private final MechanismPositionConfig robotToMechanism;
@@ -61,16 +62,9 @@ public class TurretSubsystem extends SubsystemBase {
 	private final StatusSignal<Angle> absPosition2Signal;
 	private final EasyCRTConfig easyCRTConfig;
 
-	// Create a timer to delay CRT run until encoders are ready
-	private Timer startUpTimer = new Timer();
-	private boolean startTimer = false;
-	private boolean delayForCRTDone = false;
-
 	private boolean rotorSeededFromAbs = false;
 	private double lastSeededTurretDeg = Double.NaN;
 	private double lastSeedError = Double.NaN;
-	private double lastAbsA = Double.NaN;
-	private double lastAbsB = Double.NaN;
 	private CRTStatus lastSeedStatus = CRTStatus.NOT_ATTEMPTED;
 
 	public TurretSubsystem() {
@@ -79,28 +73,21 @@ public class TurretSubsystem extends SubsystemBase {
 		cancoderA = new CANcoder(TurretConstants.kTurretEnc1_ID);
 		cancoderB = new CANcoder(TurretConstants.kTurretEnc2_ID);
 
-		var cancoderConfigurationA = new CANcoderConfiguration();
+		CANcoderConfiguration cancoderConfigurationA = new CANcoderConfiguration();
 		cancoderConfigurationA.MagnetSensor.MagnetOffset = TurretConstants.enc1Offset;
 		cancoderA.getConfigurator().apply(cancoderConfigurationA);
 
-		var cancoderConfigurationB = new CANcoderConfiguration();
+		CANcoderConfiguration cancoderConfigurationB = new CANcoderConfiguration();
 		cancoderConfigurationB.MagnetSensor.MagnetOffset = TurretConstants.enc2Offset;
 		cancoderB.getConfigurator().apply(cancoderConfigurationB);
 
 		absPosition1Signal = cancoderA.getAbsolutePosition();
 		absPosition2Signal = cancoderB.getAbsolutePosition();
 
-		motorTelemetryConfig = new SmartMotorControllerTelemetryConfig()
-			.withMechanismPosition()
-			.withRotorPosition()
-			.withRotorVelocity()
-			.withMechanismLowerLimit()
-			.withMechanismUpperLimit();
-
 		motorConfig = new SmartMotorControllerConfig(this)
 			.withClosedLoopController(80, 0, 0, DegreesPerSecond.of(45), DegreesPerSecondPerSecond.of(45))
 			.withSimClosedLoopController(130, 0, 3.4, DegreesPerSecond.of(1000), DegreesPerSecondPerSecond.of(1500))
-			.withSoftLimit(Degrees.of(0), Degrees.of(700))
+			.withSoftLimit(Degrees.of(-30), Degrees.of(222))
 			.withFeedforward(new SimpleMotorFeedforward(0.15, 1.2))
 			.withGearing(new MechanismGearing(GearBox.fromStages("5:1")))
 			.withIdleMode(MotorMode.COAST)
@@ -124,7 +111,7 @@ public class TurretSubsystem extends SubsystemBase {
 			);
 
 		pivotConfig = new PivotConfig(motor)
-			.withHardLimit(Degrees.of(0), Degrees.of(700))
+			.withHardLimit(Degrees.of(-30), Degrees.of(222))
 			.withTelemetry("Turret", TelemetryVerbosity.HIGH)
 			.withStartingPosition(Degrees.of(0))
 			.withMechanismPositionConfig(robotToMechanism)
@@ -140,10 +127,10 @@ public class TurretSubsystem extends SubsystemBase {
 	private EasyCRTConfig buildEasyCrtConfig() {
 		return new EasyCRTConfig(absPosition1Signal::getValue, absPosition2Signal::getValue)
 			.withCommonDriveGear(1, 200, 19, 21)
-			.withAbsoluteEncoderOffsets(Rotations.of(0), Rotations.of(-0.916048))
+			.withAbsoluteEncoderOffsets(Rotations.of(0), Rotations.of(0))
 			.withAbsoluteEncoderInversions(false, false)
-			.withMechanismRange(Rotations.of(-0.1), Rotations.of(1.1))
-			.withMatchTolerance(Rotations.of(0.02))
+			.withMechanismRange(Degrees.of(-30), Degrees.of(222))
+			.withMatchTolerance(Rotations.of(0.002))
 			.withCrtGearRecommendationConstraints(1.2, 15, 60, 40);
 	}
 
@@ -193,22 +180,12 @@ public class TurretSubsystem extends SubsystemBase {
 	}
 
 	public void periodic() {
-		if (!startTimer) {
-			startUpTimer.reset();
-			startUpTimer.start();
-			startTimer = true;
-		}
-
-		if (startUpTimer.hasElapsed(5)) {
-			delayForCRTDone = true;
-		}
-
-		if (SmartDashboard.getBoolean(RERUN_SEED, false) && delayForCRTDone) {
+		if (SmartDashboard.getBoolean(RERUN_SEED, false)) {
 			SmartDashboard.putBoolean(RERUN_SEED, false);
 			rerunCrtSeed();
 		}
 		SmartDashboard.putNumber("Turret/CRT/CurrentPositionDeg", motor.getMechanismPosition().in(Degrees));
-		if (!rotorSeededFromAbs && delayForCRTDone) {
+		if (!rotorSeededFromAbs) {
 			attemptRotorSeedFromCANCoders();
 		}
 		turret.updateTelemetry();
@@ -235,11 +212,9 @@ public class TurretSubsystem extends SubsystemBase {
 
 		double absA = absRead.absA();
 		double absB = absRead.absB();
-		lastAbsA = absA;
-		lastAbsB = absB;
 
-		var solver = new EasyCRT(easyCRTConfig);
-		var solvedAngle = solver.getAngleOptional();
+		EasyCRT solver = new EasyCRT(easyCRTConfig);
+		Optional<Angle> solvedAngle = solver.getAngleOptional();
 
 		SmartDashboard.putNumber("Turret/CRT/AbsA", absA);
 		SmartDashboard.putNumber("Turret/CRT/AbsB", absB);
@@ -272,7 +247,7 @@ public class TurretSubsystem extends SubsystemBase {
 	private AbsSensorRead readAbsSensors() {
 		boolean haveDevices = cancoderA != null && cancoderB != null;
 		if (haveDevices) {
-			var status = BaseStatusSignal.refreshAll(absPosition1Signal, absPosition2Signal);
+			StatusCode status = BaseStatusSignal.refreshAll(absPosition1Signal, absPosition2Signal);
 			if (status.isOK()) {
 				return new AbsSensorRead(
 					true,
@@ -300,10 +275,10 @@ public class TurretSubsystem extends SubsystemBase {
 		SmartDashboard.putBoolean("Turret/CRT/Config/CoverageSatisfiesRange", easyCRTConfig.coverageSatisfiesRange());
 		SmartDashboard.putNumber("Turret/CRT/Config/RequiredRangeRot", mechanismRangeRot);
 
-		var configPair = easyCRTConfig.getRecommendedCrtGearPair();
+		Optional<CrtGearPair> configPair = easyCRTConfig.getRecommendedCrtGearPair();
 		SmartDashboard.putBoolean("Turret/CRT/Config/RecommendedPairFound", configPair.isPresent());
 		if (configPair.isPresent()) {
-			var pair = configPair.get();
+			CrtGearPair pair = configPair.get();
 			SmartDashboard.putNumber("Turret/CRT/Config/Reccomender/RecommendedGearA", pair.gearA());
 			SmartDashboard.putNumber("Turret/CRT/Config/Reccomender/RecommendedGearB", pair.gearB());
 			SmartDashboard.putNumber(
