@@ -4,8 +4,6 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.RPM;
-
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.controller.ProfiledPIDController;
@@ -14,6 +12,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -23,14 +22,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.constants.IntakeConstants;
 import frc.robot.constants.OperatorConstants;
-import frc.robot.subsystems.IntakeSubsystem;
-import frc.robot.subsystems.KickerSubsystem;
-import frc.robot.subsystems.ShooterSubsystem;
-import frc.robot.subsystems.SpindexerSubsystem;
 import frc.robot.subsystems.SwerveSubsystem;
-import frc.robot.subsystems.TurretSubsystem;
 import java.io.File;
 import swervelib.SwerveInputStream;
 
@@ -54,15 +47,7 @@ public class RobotContainer {
 	// Establish a Sendable Chooser that will be able to be sent to the SmartDashboard, allowing selection of desired auto
 	private final SendableChooser<Command> autoChooser;
 
-	// private final ClimberSubsystem climber = new ClimberSubsystem();
-
-	private final IntakeSubsystem bottomintake = new IntakeSubsystem();
-
-	private final ShooterSubsystem shooter = new ShooterSubsystem();
-	private final TurretSubsystem turret = new TurretSubsystem();
-
-	private final SpindexerSubsystem spindexer = new SpindexerSubsystem();
-	private final KickerSubsystem feeder = new KickerSubsystem();
+	// private final TurretSubsystem turret = new TurretSubsystem();
 
 	// private final ArmSubsystem arm = new ArmSubsystem();
 
@@ -72,8 +57,8 @@ public class RobotContainer {
 	 */
 	SwerveInputStream driveAngularVelocity = SwerveInputStream.of(
 		drivebase.getSwerveDrive(),
-		() -> driverXbox.getLeftY() * -1,
-		() -> driverXbox.getLeftX() * -1
+		() -> driverXbox.getLeftY(),
+		() -> driverXbox.getLeftX()
 	)
 		.withControllerRotationAxis(() -> driverXbox.getRightX() * -1)
 		.deadband(OperatorConstants.DEADBAND)
@@ -114,18 +99,25 @@ public class RobotContainer {
 
 	/** The container for the robot. Contains subsystems, OI devices, and commands. */
 	public RobotContainer() {
+		// drivebase
+		// 	.getSwerveDrive()
+		// 	.setGyroOffset(
+		// 		new Rotation3d(
+		// 			Angle.ofBaseUnits(0, Degree),
+		// 			Angle.ofBaseUnits(90, Degree),
+		// 			Angle.ofBaseUnits(0, Degree)
+		// 		)
+		// 	);
 		// Configure the trigger bindings
 		configureBindings();
 		DriverStation.silenceJoystickConnectionWarning(true);
+		DataLogManager.start();
 
 		// Create the NamedCommands that will be used in PathPlanner
 		NamedCommands.registerCommand("test", Commands.print("I EXIST"));
 
 		// Have the autoChooser pull in all PathPlanner autos as options
 		autoChooser = AutoBuilder.buildAutoChooser();
-
-		// Set the default auto (do nothing)
-		autoChooser.setDefaultOption("Do Nothing", Commands.none());
 
 		// Add a simple auto option to have the robot drive forward for 1 second then stop
 		autoChooser.addOption("Drive Forward", drivebase.driveForward().withTimeout(1));
@@ -158,15 +150,7 @@ public class RobotContainer {
 			drivebase.setDefaultCommand(driveFieldOrientedAnglularVelocity);
 		}
 
-		bottomintake.setDefaultCommand(bottomintake.set(0));
-
-		shooter.setDefaultCommand(shooter.set(0));
-
-		spindexer.setDefaultCommand(spindexer.set(0));
-
-		feeder.setDefaultCommand(feeder.set(0));
-
-		turret.setDefaultCommand(turret.set(0));
+		// turret.setDefaultCommand(turret.set(0));
 
 		// arm.setDefaultCommand(arm.setAngle(Degrees.of(0)));
 
@@ -197,7 +181,7 @@ public class RobotContainer {
 				);
 		}
 		if (DriverStation.isTest()) {
-			drivebase.setDefaultCommand(driveFieldOrientedAnglularVelocity); // Overrides drive command above!
+			drivebase.setDefaultCommand(driveRobotOrientedAngularVelocity); // Overrides drive command above!
 
 			driverXbox.rightBumper().onTrue(Commands.none());
 		} else {
@@ -207,15 +191,9 @@ public class RobotContainer {
 		// driverXbox.rightBumper().whileTrue(climber.c_climb());
 		// driverXbox.rightTrigger().whileTrue(climber.c_climbReverse());
 
-		operatorControler.a().whileTrue(bottomintake.set(-IntakeConstants.kIntakeDutyCycle));
+		// operatorControler.rightTrigger().whileTrue(turret.set(.3));
 
-		operatorControler.y().whileTrue(shooter.setVelocity(RPM.of(6250)));
-
-		operatorControler.b().whileTrue(spindexer.set(-.85).alongWith(feeder.set(-0.25)));
-
-		operatorControler.rightTrigger().whileTrue(turret.set(.3));
-
-		operatorControler.leftTrigger().whileTrue(turret.set(-.3));
+		// operatorControler.leftTrigger().whileTrue(turret.set(-.3));
 		// operatorControler.leftBumper().whileTrue(turret.sysId());
 	}
 

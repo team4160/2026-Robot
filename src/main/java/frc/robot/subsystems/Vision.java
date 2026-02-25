@@ -46,19 +46,14 @@ public class Vision {
 	public static final AprilTagFieldLayout fieldLayout = AprilTagFieldLayout.loadField(
 		AprilTagFields.k2025ReefscapeAndyMark
 	);
-
 	/** Ambiguity defined as a value between (0,1). Used in {@link Vision#filterPose}. */
 	private final double maximumAmbiguity = 0.25;
-
 	/** Photon Vision Simulation */
 	public VisionSystemSim visionSim;
-
 	/** Count of times that the odom thinks we're more than 10meters away from the april tag. */
 	private double longDistangePoseEstimationCount = 0;
-
 	/** Current pose from the pose estimator using wheel odometry. */
 	private Supplier<Pose2d> currentPose;
-
 	/** Field from {@link swervelib.SwerveDrive#field} */
 	private Field2d field2d;
 
@@ -71,15 +66,12 @@ public class Vision {
 	public Vision(Supplier<Pose2d> currentPose, Field2d field) {
 		this.currentPose = currentPose;
 		this.field2d = field;
-
 		if (Robot.isSimulation()) {
 			visionSim = new VisionSystemSim("Vision");
 			visionSim.addAprilTags(fieldLayout);
-
 			for (Cameras c : Cameras.values()) {
 				c.addToVisionSim(visionSim);
 			}
-
 			openSimCameraViews();
 		}
 	}
@@ -179,11 +171,9 @@ public class Vision {
 			if (bestTargetAmbiguity > maximumAmbiguity) {
 				return Optional.empty();
 			}
-
 			// est pose is very far from recorded robot pose
 			if (PhotonUtils.getDistanceToPose(currentPose.get(), pose.get().estimatedPose.toPose2d()) > 1) {
 				longDistangePoseEstimationCount++;
-
 				// if it calculates that were 10 meter away for more than 10 times in a row its probably right
 				if (longDistangePoseEstimationCount < 10) {
 					return Optional.empty();
@@ -266,7 +256,6 @@ public class Vision {
 				}
 			}
 		}
-
 		List<Pose2d> poses = new ArrayList<>();
 		for (PhotonTrackedTarget target : targets) {
 			if (fieldLayout.getTagPose(target.getFiducialId()).isPresent()) {
@@ -274,7 +263,6 @@ public class Vision {
 				poses.add(targetPose);
 			}
 		}
-
 		field2d.getObject("tracked targets").setPoses(poses);
 	}
 
@@ -311,31 +299,22 @@ public class Vision {
 
 		/** Latency alert to use when high latency is detected. */
 		public final Alert latencyAlert;
-
 		/** Camera instance for comms. */
 		public final PhotonCamera camera;
-
 		/** Pose estimator for camera. */
 		public final PhotonPoseEstimator poseEstimator;
-
 		/** Standard Deviation for single tag readings for pose estimation. */
 		private final Matrix<N3, N1> singleTagStdDevs;
-
 		/** Standard deviation for multi-tag readings for pose estimation. */
 		private final Matrix<N3, N1> multiTagStdDevs;
-
 		/** Transform of the camera rotation and translation relative to the center of the robot */
 		private final Transform3d robotToCamTransform;
-
 		/** Current standard deviations used. */
 		public Matrix<N3, N1> curStdDevs;
-
 		/** Estimated robot pose. */
 		public Optional<EstimatedRobotPose> estimatedRobotPose = Optional.empty();
-
 		/** Simulated camera instance which only exists during simulations. */
 		public PhotonCameraSim cameraSim;
-
 		/** Results list to be updated periodically and cached to avoid unnecessary queries. */
 		public List<PhotonPipelineResult> resultsList = new ArrayList<>();
 
@@ -359,18 +338,13 @@ public class Vision {
 			Matrix<N3, N1> multiTagStdDevsMatrix
 		) {
 			latencyAlert = new Alert("'" + name + "' Camera is experiencing high latency.", AlertType.kWarning);
-
 			camera = new PhotonCamera(name);
-
 			// https://docs.wpilib.org/en/stable/docs/software/basic-programming/coordinate-system.html
 			robotToCamTransform = new Transform3d(robotToCamTranslation, robotToCamRotation);
-
 			poseEstimator = new PhotonPoseEstimator(Vision.fieldLayout, robotToCamTransform);
 			poseEstimator.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
-
 			this.singleTagStdDevs = singleTagStdDevs;
 			this.multiTagStdDevs = multiTagStdDevsMatrix;
-
 			if (Robot.isSimulation()) {
 				SimCameraProperties cameraProp = new SimCameraProperties();
 				// A 640 x 480 camera with a 100 degree diagonal FOV.
@@ -382,7 +356,6 @@ public class Vision {
 				// The average and standard deviation in milliseconds of image data latency.
 				cameraProp.setAvgLatencyMs(35);
 				cameraProp.setLatencyStdDevMs(5);
-
 				cameraSim = new PhotonCameraSim(camera, cameraProp);
 				cameraSim.enableDrawWireframe(true);
 			}
@@ -410,7 +383,6 @@ public class Vision {
 			if (resultsList.isEmpty()) {
 				return Optional.empty();
 			}
-
 			PhotonPipelineResult bestResult = resultsList.get(0);
 			double amiguity = bestResult.getBestTarget().getPoseAmbiguity();
 			double currentAmbiguity = 0;
@@ -450,11 +422,9 @@ public class Vision {
 		 */
 		private void updateUnreadResults() {
 			double mostRecentTimestamp = resultsList.isEmpty() ? 0.0 : resultsList.get(0).getTimestampSeconds();
-
 			for (PhotonPipelineResult result : resultsList) {
 				mostRecentTimestamp = Math.max(mostRecentTimestamp, result.getTimestampSeconds());
 			}
-
 			resultsList = Robot.isReal() ? camera.getAllUnreadResults() : cameraSim.getCamera().getAllUnreadResults();
 			resultsList.sort((PhotonPipelineResult a, PhotonPipelineResult b) -> {
 				return a.getTimestampSeconds() >= b.getTimestampSeconds() ? 1 : -1;
@@ -502,7 +472,6 @@ public class Vision {
 				var estStdDevs = singleTagStdDevs;
 				int numTags = 0;
 				double avgDist = 0;
-
 				// Precalculation - see how many tags we found, and calculate an average-distance metric
 				for (var tgt : targets) {
 					var tagPose = poseEstimator.getFieldTags().getTagPose(tgt.getFiducialId());
@@ -516,7 +485,6 @@ public class Vision {
 						.getTranslation()
 						.getDistance(estimatedPose.get().estimatedPose.toPose2d().getTranslation());
 				}
-
 				if (numTags == 0) {
 					// No tags visible. Default to single-tag std devs
 					curStdDevs = singleTagStdDevs;

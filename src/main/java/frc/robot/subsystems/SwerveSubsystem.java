@@ -1,7 +1,6 @@
 // Copyright (c) FIRST and other WPILib contributors.
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
-
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Meter;
@@ -56,10 +55,8 @@ public class SwerveSubsystem extends SubsystemBase {
 
 	/** Swerve drive object. */
 	private final SwerveDrive swerveDrive;
-
 	/** Enable vision odometry updates while driving. */
 	private final boolean visionDriveTest = false;
-
 	/** PhotonVision class to keep an accurate odometry. */
 	private Vision vision;
 
@@ -133,7 +130,6 @@ public class SwerveSubsystem extends SubsystemBase {
 		RobotConfig config;
 		try {
 			config = RobotConfig.fromGUISettings();
-
 			final boolean enableFeedforward = true;
 			// Configure AutoBuilder last
 			AutoBuilder.configure(
@@ -168,7 +164,6 @@ public class SwerveSubsystem extends SubsystemBase {
 					// Boolean supplier that controls when the path will be mirrored for the red alliance
 					// This will flip the path being followed to the red side of the field.
 					// THE ORIGIN WILL REMAIN ON THE BLUE SIDE
-
 					var alliance = DriverStation.getAlliance();
 					if (alliance.isPresent()) {
 						return alliance.get() == DriverStation.Alliance.Red;
@@ -182,7 +177,6 @@ public class SwerveSubsystem extends SubsystemBase {
 			// Handle exception as needed
 			e.printStackTrace();
 		}
-
 		// Preload PathPlanner Path finding
 		// IF USING CUSTOM PATHFINDER ADD BEFORE THIS LINE
 		PathfindingCommand.warmupCommand().schedule();
@@ -231,7 +225,6 @@ public class SwerveSubsystem extends SubsystemBase {
 			swerveDrive.getMaximumChassisAngularVelocity(),
 			Units.degreesToRadians(720)
 		);
-
 		// Since AutoBuilder is configured, we can use it to build pathfinding commands
 		return AutoBuilder.pathfindToPose(
 			pose,
@@ -262,7 +255,6 @@ public class SwerveSubsystem extends SubsystemBase {
 			)
 		);
 		AtomicReference<Double> previousTime = new AtomicReference<>();
-
 		return startRun(
 			() -> previousTime.set(Timer.getFPGATimestamp()),
 			() -> {
@@ -410,7 +402,6 @@ public class SwerveSubsystem extends SubsystemBase {
 				new Translation2d(translationX.getAsDouble(), translationY.getAsDouble()),
 				0.8
 			);
-
 			// Make the robot move
 			driveFieldOriented(
 				swerveDrive.swerveController.getTargetSpeeds(
@@ -606,7 +597,6 @@ public class SwerveSubsystem extends SubsystemBase {
 	 */
 	public ChassisSpeeds getTargetSpeeds(double xInput, double yInput, Rotation2d angle) {
 		Translation2d scaledInputs = SwerveMath.cubeTranslation(new Translation2d(xInput, yInput));
-
 		return swerveDrive.swerveController.getTargetSpeeds(
 			scaledInputs.getX(),
 			scaledInputs.getY(),
