@@ -36,10 +36,10 @@ public class KickerSubsystem extends SubsystemBase {
 		.withControlMode(ControlMode.CLOSED_LOOP)
 		// Feedback Constants (PID Constants)
 		.withClosedLoopController(0, 0, 0)
-		.withSimClosedLoopController(0, 0, 0)
+		// .withSimClosedLoopController(0, 0, 0)
 		// Feedforward Constants
 		.withFeedforward(new SimpleMotorFeedforward(0.0, 0.0, 0))
-		.withSimFeedforward(new SimpleMotorFeedforward(0.0, 0.0, 0))
+		// .withSimFeedforward(new SimpleMotorFeedforward(0.0, 0.0, 0))
 		// Telemetry name and verbosity level
 		.withTelemetry("KickerMotor", TelemetryVerbosity.HIGH)
 		// Gearing from the motor rotor to final shaft.
@@ -49,7 +49,7 @@ public class KickerSubsystem extends SubsystemBase {
 		.withGearing(new MechanismGearing(GearBox.fromStages("3:1")))
 		// Motor properties to prevent over currenting.
 		.withMotorInverted(false)
-		.withIdleMode(MotorMode.BRAKE)
+		.withIdleMode(MotorMode.COAST)
 		.withStatorCurrentLimit(Amps.of(40));
 
 	// Create our SmartMotorController

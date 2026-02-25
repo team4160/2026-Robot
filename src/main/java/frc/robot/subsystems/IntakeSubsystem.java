@@ -36,17 +36,17 @@ public class IntakeSubsystem extends SubsystemBase {
 		.withControlMode(ControlMode.CLOSED_LOOP)
 		// Feedback Constants (PID Constants)
 		.withClosedLoopController(1, 0, 0)
-		.withSimClosedLoopController(1, 0, 0)
+		// .withSimClosedLoopController(1, 0, 0)
 		// Feedforward Constants
 		.withFeedforward(new SimpleMotorFeedforward(0, 0, 0))
-		.withSimFeedforward(new SimpleMotorFeedforward(0, 0, 0))
+		// .withSimFeedforward(new SimpleMotorFeedforward(0, 0, 0))
 		// Telemetry name and verbosity level
 		.withTelemetry("IntakeMotor", TelemetryVerbosity.HIGH)
 		// Gearing from the motor rotor to final shaft.
 		// In this example GearBox.fromReductionStages(3,4) is the same as
 		// GearBox.fromStages("3:1","4:1") which corresponds to the gearbox attached to your motor.
 		// You could also use .withGearing(12) which does the same thing.
-		.withGearing(new MechanismGearing(GearBox.fromReductionStages(1, 1)))
+		.withGearing(new MechanismGearing(GearBox.fromStages("72:24")))
 		// Motor properties to prevent over currenting.
 		.withMotorInverted(false)
 		.withIdleMode(MotorMode.COAST)

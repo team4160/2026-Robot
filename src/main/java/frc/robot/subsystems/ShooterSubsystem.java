@@ -49,7 +49,7 @@ public class ShooterSubsystem extends SubsystemBase {
 		// In this example GearBox.fromReductionStages(3,4) is the same as
 		// GearBox.fromStages("3:1","4:1") which corresponds to the gearbox attached to your motor.
 		// You could also use .withGearing(12) which does the same thing.
-		.withGearing(new MechanismGearing(GearBox.fromReductionStages(1, 1)))
+		.withGearing(new MechanismGearing(GearBox.fromStages("45:48")))
 		// Motor properties to prevent over currenting.
 		.withMotorInverted(false)
 		.withIdleMode(MotorMode.COAST)
