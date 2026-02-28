@@ -85,10 +85,10 @@ public class TurretSubsystem extends SubsystemBase {
 		absPosition2Signal = cancoderB.getAbsolutePosition();
 
 		motorConfig = new SmartMotorControllerConfig(this)
-			.withClosedLoopController(80, 0, 0, DegreesPerSecond.of(45), DegreesPerSecondPerSecond.of(45))
-			.withSimClosedLoopController(130, 0, 3.4, DegreesPerSecond.of(1000), DegreesPerSecondPerSecond.of(1500))
+			.withClosedLoopController(0.4491, 0, 0, DegreesPerSecond.of(45), DegreesPerSecondPerSecond.of(45))
+			// .withSimClosedLoopController(130, 0, 3.4, DegreesPerSecond.of(1000), DegreesPerSecondPerSecond.of(1500))
 			.withSoftLimit(Degrees.of(-30), Degrees.of(222))
-			.withFeedforward(new SimpleMotorFeedforward(0.15, 1.2))
+			.withFeedforward(new SimpleMotorFeedforward(0.18, 4.1566, 0.11307))
 			.withGearing(new MechanismGearing(GearBox.fromStages("5:1")))
 			.withIdleMode(MotorMode.COAST)
 			.withTelemetry("TurretMotorV2", TelemetryVerbosity.HIGH)

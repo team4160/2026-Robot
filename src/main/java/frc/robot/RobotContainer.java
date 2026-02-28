@@ -27,6 +27,8 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.ShootOnTheMoveCommand;
 import frc.robot.constants.IntakeConstants;
 import frc.robot.constants.OperatorConstants;
+import frc.robot.subsystems.HoodSubsystem;
+import frc.robot.subsystems.IntakeArmSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.KickerSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
@@ -57,15 +59,24 @@ public class RobotContainer {
 	// Establish a Sendable Chooser that will be able to be sent to the SmartDashboard, allowing selection of desired auto
 	private final SendableChooser<Command> autoChooser;
 
-	private final IntakeSubsystem intake = new IntakeSubsystem();
-
 	private final ShooterSubsystem shooter = new ShooterSubsystem();
 	private final TurretSubsystem turret = new TurretSubsystem();
-
-	private final SpindexerSubsystem spindexer = new SpindexerSubsystem();
+	private final HoodSubsystem hood = new HoodSubsystem();
+	private final IntakeSubsystem intake = new IntakeSubsystem();
+	private final IntakeArmSubsystem intakeArm = new IntakeArmSubsystem();
 	private final KickerSubsystem kicker = new KickerSubsystem();
+	private final SpindexerSubsystem spindexer = new SpindexerSubsystem();
 
-	final ScoringSystem scoringSystem = new ScoringSystem(shooter, turret, drivebase);
+	final ScoringSystem scoringSystem = new ScoringSystem(
+		shooter,
+		turret,
+		hood,
+		drivebase,
+		intake,
+		intakeArm,
+		kicker,
+		spindexer
+	);
 
 	/**
 	 * Converts driver input into a field-relative ChassisSpeeds that is controlled by angular
@@ -204,11 +215,7 @@ public class RobotContainer {
 
 		driverXbox
 			.x()
-			.toggleOnTrue(
-				new ShootOnTheMoveCommand(drivebase, scoringSystem, () -> scoringSystem.getAimPoint()).withName(
-					"OperatorControls.aimCommand"
-				)
-			);
+			.toggleOnTrue(new ShootOnTheMoveCommand(drivebase, scoringSystem).withName("OperatorControls.aimCommand"));
 
 		operatorXbox.a().whileTrue(intake.set(-IntakeConstants.kIntakeDutyCycle));
 

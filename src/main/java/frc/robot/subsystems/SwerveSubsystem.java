@@ -41,6 +41,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
+import lombok.Setter;
 import org.json.simple.parser.ParseException;
 import org.photonvision.targeting.PhotonPipelineResult;
 import swervelib.SwerveController;
@@ -63,6 +64,18 @@ public class SwerveSubsystem extends SubsystemBase {
 
 	/** PhotonVision class to keep an accurate odometry. */
 	private Vision vision;
+
+	public static class SwerveState {
+
+		@Setter
+		public static Supplier<SwerveDrive> swerveDrive = () -> null;
+
+		@Setter
+		public static Pose2d CurrentPose = Pose2d.kZero;
+
+		@Setter
+		public static ChassisSpeeds CurrentSpeeds = new ChassisSpeeds();
+	}
 
 	/**
 	 * Initialize {@link SwerveDrive} with the directory provided.
@@ -94,6 +107,7 @@ public class SwerveSubsystem extends SubsystemBase {
 			swerveDrive.stopOdometryThread();
 		}
 		setupPathPlanner();
+		SwerveState.swerveDrive = () -> swerveDrive;
 	}
 
 	/**
@@ -123,6 +137,8 @@ public class SwerveSubsystem extends SubsystemBase {
 			swerveDrive.updateOdometry();
 			vision.updatePoseEstimation(swerveDrive);
 		}
+		SwerveState.CurrentPose = swerveDrive.getPose();
+		SwerveState.CurrentSpeeds = swerveDrive.getRobotVelocity();
 	}
 
 	@Override
