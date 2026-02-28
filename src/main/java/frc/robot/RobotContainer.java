@@ -170,6 +170,8 @@ public class RobotContainer {
 
 		intake.setDefaultCommand(intake.set(0));
 
+		intakeArm.setDefaultCommand(intakeArm.set(0));
+
 		shooter.setDefaultCommand(shooter.set(0));
 
 		spindexer.setDefaultCommand(spindexer.set(0));
@@ -177,6 +179,8 @@ public class RobotContainer {
 		kicker.setDefaultCommand(kicker.set(0));
 
 		turret.setDefaultCommand(turret.set(0));
+
+		hood.setDefaultCommand(hood.setDutyCycle(0));
 
 		if (Robot.isSimulation()) {
 			Pose2d target = new Pose2d(new Translation2d(1, 4), Rotation2d.fromDegrees(90));
@@ -226,7 +230,7 @@ public class RobotContainer {
 		operatorXbox.rightTrigger().whileTrue(turret.set(.3));
 
 		operatorXbox.leftTrigger().whileTrue(turret.set(-.3));
-		// operatorControler.leftBumper().whileTrue(turret.sysId());
+		operatorXbox.leftBumper().whileTrue(shooter.sysId());
 	}
 
 	/**

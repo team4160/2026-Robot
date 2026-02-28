@@ -8,8 +8,7 @@ import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.SparkMax;
+import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -25,12 +24,12 @@ import yams.motorcontrollers.SmartMotorControllerConfig;
 import yams.motorcontrollers.SmartMotorControllerConfig.ControlMode;
 import yams.motorcontrollers.SmartMotorControllerConfig.MotorMode;
 import yams.motorcontrollers.SmartMotorControllerConfig.TelemetryVerbosity;
-import yams.motorcontrollers.local.SparkWrapper;
+import yams.motorcontrollers.remote.TalonFXWrapper;
 
 public class IntakeArmSubsystem extends SubsystemBase {
 
-	private SparkMax armLeader = new SparkMax(14, MotorType.kBrushless);
-	private SparkMax armFollower = new SparkMax(13, MotorType.kBrushless);
+	private TalonFX armLeader = new TalonFX(11);
+	private TalonFX armFollower = new TalonFX(12);
 
 	private SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
 		.withControlMode(ControlMode.CLOSED_LOOP)
@@ -44,8 +43,7 @@ public class IntakeArmSubsystem extends SubsystemBase {
 		.withTelemetry("Arm Motor", TelemetryVerbosity.HIGH)
 		// Gearing from the motor rotor to final shaft.
 		// In this example GearBox.fromReductionStages(3,4) is the same as
-		// GearBox.fromStages("3:1","4:1") which corresponds to the gearbox attached to your
-		// motor.
+		// GearBox.fromStages("3:1","4:1") which corresponds to the gearbox attached to your motor.
 		// You could also use .withGearing(12) which does the same thing.
 		.withGearing(new MechanismGearing(GearBox.fromReductionStages(45)))
 		// Motor properties to prevent over currenting.
@@ -55,11 +53,14 @@ public class IntakeArmSubsystem extends SubsystemBase {
 		.withClosedLoopRampRate(Seconds.of(0.25))
 		.withOpenLoopRampRate(Seconds.of(0.25))
 		.withFollowers(Pair.of(armFollower, true));
-	// .withFollowers(Pair.of(sparkFollower, true));
 
-	private SmartMotorController sparkSmartMotorController = new SparkWrapper(armLeader, DCMotor.getNEO(2), smcConfig);
+	private SmartMotorController SmartMotorController = new TalonFXWrapper(
+		armLeader,
+		DCMotor.getFalcon500(2),
+		smcConfig
+	);
 
-	private ArmConfig armCfg = new ArmConfig(sparkSmartMotorController)
+	private ArmConfig armCfg = new ArmConfig(SmartMotorController)
 		// Soft limit is applied to the SmartMotorControllers PID
 		.withSoftLimits(Degrees.of(-100), Degrees.of(0))
 		// Hard limit is applied to the simulation.

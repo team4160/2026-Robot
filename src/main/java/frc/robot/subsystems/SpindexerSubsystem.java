@@ -63,7 +63,7 @@ public class SpindexerSubsystem extends SubsystemBase {
 		// Maximum speed of the shooter.
 		.withUpperSoftLimit(RPM.of(6784 * 4))
 		// Telemetry name and verbosity for the arm.
-		.withTelemetry("ShooterMech", TelemetryVerbosity.HIGH);
+		.withTelemetry("SpindexerMech", TelemetryVerbosity.HIGH);
 
 	// Shooter Mechanism
 	private FlyWheel shooter = new FlyWheel(shooterConfig);

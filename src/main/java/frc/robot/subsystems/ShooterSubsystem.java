@@ -8,6 +8,9 @@ import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Pounds;
 import static edu.wpi.first.units.Units.RPM;
+import static edu.wpi.first.units.Units.Second;
+import static edu.wpi.first.units.Units.Seconds;
+import static edu.wpi.first.units.Units.Volts;
 
 import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.math.Pair;
@@ -54,7 +57,7 @@ public class ShooterSubsystem extends SubsystemBase {
 		.withMotorInverted(false)
 		.withIdleMode(MotorMode.COAST)
 		.withStatorCurrentLimit(Amps.of(40))
-		.withFollowers(Pair.of(shooterFollower, true));
+		.withFollowers(Pair.of(shooterFollower, false));
 
 	// Create our SmartMotorController
 	private SmartMotorController shooterLeaderMotor = new TalonFXWrapper(
@@ -69,7 +72,8 @@ public class ShooterSubsystem extends SubsystemBase {
 		// Mass of the flywheel.
 		.withMass(Pounds.of(1))
 		// Maximum speed of the shooter.
-		.withUpperSoftLimit(RPM.of(6784 * 4))
+		.withUpperSoftLimit(RPM.of(20000))
+		.withLowerSoftLimit(RPM.of(0))
 		// Telemetry name and verbosity for the arm.
 		.withTelemetry("Shooter Mech", TelemetryVerbosity.HIGH);
 
@@ -111,6 +115,14 @@ public class ShooterSubsystem extends SubsystemBase {
 	 */
 	public Command set(double dutyCycle) {
 		return shooter.set(dutyCycle);
+	}
+
+	public Command sysId() {
+		return shooter.sysId(
+			Volts.of(10.0), // maximumVoltage
+			Volts.per(Second).of(1), // step
+			Seconds.of(10.0) // duration
+		);
 	}
 
 	/** Creates a new ExampleSubsystem. */

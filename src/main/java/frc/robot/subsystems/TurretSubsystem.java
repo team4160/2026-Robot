@@ -130,7 +130,7 @@ public class TurretSubsystem extends SubsystemBase {
 			.withAbsoluteEncoderOffsets(Rotations.of(0), Rotations.of(0))
 			.withAbsoluteEncoderInversions(false, false)
 			.withMechanismRange(Degrees.of(-30), Degrees.of(222))
-			.withMatchTolerance(Rotations.of(0.002))
+			.withMatchTolerance(Rotations.of(0.02))
 			.withCrtGearRecommendationConstraints(1.2, 15, 60, 40);
 	}
 

@@ -8,6 +8,10 @@ import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Pounds;
 import static edu.wpi.first.units.Units.RPM;
+import static edu.wpi.first.units.Units.Rotations;
+import static edu.wpi.first.units.Units.Second;
+import static edu.wpi.first.units.Units.Seconds;
+import static edu.wpi.first.units.Units.Volts;
 
 import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
@@ -30,7 +34,7 @@ import yams.motorcontrollers.remote.TalonFXWrapper;
 public class KickerSubsystem extends SubsystemBase {
 
 	// Vendor motor controller object
-	private TalonFX kicker = new TalonFX(HopperConstants.kKicker_ID);
+	private TalonFX kickerMotor = new TalonFX(HopperConstants.kKicker_ID);
 
 	private SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
 		.withControlMode(ControlMode.CLOSED_LOOP)
@@ -50,10 +54,11 @@ public class KickerSubsystem extends SubsystemBase {
 		// Motor properties to prevent over currenting.
 		.withMotorInverted(false)
 		.withIdleMode(MotorMode.COAST)
+		.withSoftLimit(Rotations.of(0), Rotations.of(100))
 		.withStatorCurrentLimit(Amps.of(40));
 
 	// Create our SmartMotorController
-	private SmartMotorController motor = new TalonFXWrapper(kicker, DCMotor.getFalcon500(1), smcConfig);
+	private SmartMotorController motor = new TalonFXWrapper(kickerMotor, DCMotor.getFalcon500(1), smcConfig);
 
 	private final FlyWheelConfig kickerConfig = new FlyWheelConfig(motor)
 		// Diameter of the flywheel.
@@ -61,12 +66,13 @@ public class KickerSubsystem extends SubsystemBase {
 		// Mass of the flywheel.
 		.withMass(Pounds.of(1))
 		// Maximum speed of the kicker.
-		.withUpperSoftLimit(RPM.of(6784 * 4))
+		.withUpperSoftLimit(RPM.of(20000))
+		.withLowerSoftLimit(RPM.of(0))
 		// Telemetry name and verbosity for the arm.
 		.withTelemetry("kickerMech", TelemetryVerbosity.HIGH);
 
 	// Kicker Mechanism
-	private FlyWheel kickerWheel = new FlyWheel(kickerConfig);
+	private FlyWheel kicker = new FlyWheel(kickerConfig);
 
 	/**
 	 * Gets the current velocity of the kicker.
@@ -74,7 +80,7 @@ public class KickerSubsystem extends SubsystemBase {
 	 * @return Kicker velocity.
 	 */
 	public AngularVelocity getVelocity() {
-		return kickerWheel.getSpeed();
+		return kicker.getSpeed();
 	}
 
 	/**
@@ -84,7 +90,7 @@ public class KickerSubsystem extends SubsystemBase {
 	 * @return {@link edu.wpi.first.wpilibj2.command.RunCommand}
 	 */
 	public Command setVelocity(AngularVelocity speed) {
-		return kickerWheel.setSpeed(speed);
+		return kicker.setSpeed(speed);
 	}
 
 	/**
@@ -94,7 +100,15 @@ public class KickerSubsystem extends SubsystemBase {
 	 * @return {@link edu.wpi.first.wpilibj2.command.RunCommand}
 	 */
 	public Command set(double dutyCycle) {
-		return kickerWheel.set(dutyCycle);
+		return kicker.set(dutyCycle);
+	}
+
+	public Command sysId() {
+		return kicker.sysId(
+			Volts.of(10.0), // maximumVoltage
+			Volts.per(Second).of(0.5), // step
+			Seconds.of(20.0) // duration
+		);
 	}
 
 	/** Creates a new ExampleSubsystem. */
@@ -126,12 +140,12 @@ public class KickerSubsystem extends SubsystemBase {
 	@Override
 	public void periodic() {
 		// This method will be called once per scheduler run
-		kickerWheel.updateTelemetry();
+		kicker.updateTelemetry();
 	}
 
 	@Override
 	public void simulationPeriodic() {
 		// This method will be called once per scheduler run during simulation
-		kickerWheel.simIterate();
+		kicker.simIterate();
 	}
 }
