@@ -41,11 +41,11 @@ public class ShooterSubsystem extends SubsystemBase {
 	private SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
 		.withControlMode(ControlMode.CLOSED_LOOP)
 		// Feedback Constants (PID Constants)
-		.withClosedLoopController(.01, 0, .175)
-		.withSimClosedLoopController(.015, 0, 0.175)
+		.withClosedLoopController(0.69, 0.25, 0)
+		// .withSimClosedLoopController(.015, 0, 0.175)
 		// Feedforward Constants
-		.withFeedforward(new SimpleMotorFeedforward(0.025, 0.011858, 0))
-		.withSimFeedforward(new SimpleMotorFeedforward(0.025, 0.011858, 0))
+		.withFeedforward(new SimpleMotorFeedforward(0.0, 0.0111, 0))
+		// .withSimFeedforward(new SimpleMotorFeedforward(0.025, 0.011858, 0))
 		// Telemetry name and verbosity level
 		.withTelemetry("ShooterMotor", TelemetryVerbosity.HIGH)
 		// Gearing from the motor rotor to final shaft.
@@ -72,7 +72,7 @@ public class ShooterSubsystem extends SubsystemBase {
 		// Mass of the flywheel.
 		.withMass(Pounds.of(1))
 		// Maximum speed of the shooter.
-		.withUpperSoftLimit(RPM.of(20000))
+		.withUpperSoftLimit(RPM.of(100))
 		.withLowerSoftLimit(RPM.of(0))
 		// Telemetry name and verbosity for the arm.
 		.withTelemetry("Shooter Mech", TelemetryVerbosity.HIGH);

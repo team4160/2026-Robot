@@ -8,7 +8,6 @@ import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Pounds;
 import static edu.wpi.first.units.Units.RPM;
-import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
@@ -39,10 +38,10 @@ public class KickerSubsystem extends SubsystemBase {
 	private SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
 		.withControlMode(ControlMode.CLOSED_LOOP)
 		// Feedback Constants (PID Constants)
-		.withClosedLoopController(0, 0, 0)
+		.withClosedLoopController(0.69, 0.5, 0)
 		// .withSimClosedLoopController(0, 0, 0)
 		// Feedforward Constants
-		.withFeedforward(new SimpleMotorFeedforward(0.0, 0.0, 0))
+		.withFeedforward(new SimpleMotorFeedforward(0.0, 0.345, 0))
 		// .withSimFeedforward(new SimpleMotorFeedforward(0.0, 0.0, 0))
 		// Telemetry name and verbosity level
 		.withTelemetry("KickerMotor", TelemetryVerbosity.HIGH)
@@ -54,7 +53,6 @@ public class KickerSubsystem extends SubsystemBase {
 		// Motor properties to prevent over currenting.
 		.withMotorInverted(false)
 		.withIdleMode(MotorMode.COAST)
-		.withSoftLimit(Rotations.of(0), Rotations.of(100))
 		.withStatorCurrentLimit(Amps.of(40));
 
 	// Create our SmartMotorController
@@ -66,7 +64,7 @@ public class KickerSubsystem extends SubsystemBase {
 		// Mass of the flywheel.
 		.withMass(Pounds.of(1))
 		// Maximum speed of the kicker.
-		.withUpperSoftLimit(RPM.of(20000))
+		.withUpperSoftLimit(RPM.of(34))
 		.withLowerSoftLimit(RPM.of(0))
 		// Telemetry name and verbosity for the arm.
 		.withTelemetry("kickerMech", TelemetryVerbosity.HIGH);
