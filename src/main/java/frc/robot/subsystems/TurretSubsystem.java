@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.DegreesPerSecond;
 import static edu.wpi.first.units.Units.DegreesPerSecondPerSecond;
+import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Pounds;
 import static edu.wpi.first.units.Units.Rotations;
@@ -11,8 +12,6 @@ import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 
-import com.ctre.phoenix6.BaseStatusSignal;
-import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.hardware.CANcoder;
@@ -21,12 +20,11 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.constants.GenericConstants;
 import frc.robot.constants.TurretConstants;
-import java.util.Optional;
 import java.util.function.Supplier;
 import yams.gearing.GearBox;
 import yams.gearing.MechanismGearing;
@@ -37,18 +35,15 @@ import yams.motorcontrollers.SmartMotorController;
 import yams.motorcontrollers.SmartMotorControllerConfig;
 import yams.motorcontrollers.SmartMotorControllerConfig.ControlMode;
 import yams.motorcontrollers.SmartMotorControllerConfig.MotorMode;
-import yams.motorcontrollers.SmartMotorControllerConfig.TelemetryVerbosity;
 import yams.motorcontrollers.remote.TalonFXWrapper;
 import yams.units.EasyCRT;
-import yams.units.EasyCRT.CRTStatus;
 import yams.units.EasyCRTConfig;
-import yams.units.EasyCRTConfig.CrtGearPair;
 
 /** Turret that uses YAMS CRT */
 public class TurretSubsystem extends SubsystemBase {
 
-	/** Manually rerun CRT seeding. */
-	private static final String RERUN_SEED = "Turret/CRT/RerunSeed";
+	public static final AngularVelocity threshold = DegreesPerSecond.of(5); // Set a threshold
+	public static final Angle toleranceAngle = Degrees.of(0.1); // Set a threshold
 
 	private final TalonFX turretMotor;
 	private final SmartMotorControllerConfig motorConfig;
@@ -61,11 +56,7 @@ public class TurretSubsystem extends SubsystemBase {
 	private final StatusSignal<Angle> absPosition1Signal;
 	private final StatusSignal<Angle> absPosition2Signal;
 	private final EasyCRTConfig easyCRTConfig;
-
-	private boolean rotorSeededFromAbs = false;
-	private double lastSeededTurretDeg = Double.NaN;
-	private double lastSeedError = Double.NaN;
-	private CRTStatus lastSeedStatus = CRTStatus.NOT_ATTEMPTED;
+	private final EasyCRT easyCrtSolver;
 
 	public TurretSubsystem() {
 		turretMotor = new TalonFX(TurretConstants.kTurretMotor_ID);
@@ -91,7 +82,7 @@ public class TurretSubsystem extends SubsystemBase {
 			.withFeedforward(new SimpleMotorFeedforward(0.18, 4.1566, 0.11307))
 			.withGearing(new MechanismGearing(GearBox.fromStages("5:1")))
 			.withIdleMode(MotorMode.COAST)
-			.withTelemetry("TurretMotorV2", TelemetryVerbosity.HIGH)
+			.withTelemetry("TurretMotorV2", GenericConstants.kTelemetryVerbosity)
 			.withStatorCurrentLimit(Amps.of(40))
 			// .withSupplyCurrentLimit(Amps.of(40))
 			.withMotorInverted(false)
@@ -100,27 +91,26 @@ public class TurretSubsystem extends SubsystemBase {
 		motor = new TalonFXWrapper(turretMotor, DCMotor.getKrakenX44(1), motorConfig);
 
 		robotToMechanism = new MechanismPositionConfig()
-			.withMaxRobotHeight(Meters.of(1.5))
-			.withMaxRobotLength(Meters.of(0.75))
+			.withMaxRobotHeight(Inches.of(9))
+			.withMaxRobotLength(Inches.of(12))
 			.withRelativePosition(
 				new Translation3d(
-					Meters.of(-0.1524), // back from robot center
-					Meters.of(0.0), // centered left/right
-					Meters.of(0.451739) // up from the floor reference
+					Inches.of(-5.3), // back from robot center
+					Inches.of(4.4), // centered left/right
+					Inches.of(11) // up from the floor reference
 				)
 			);
 
 		pivotConfig = new PivotConfig(motor)
 			.withHardLimit(Degrees.of(-30), Degrees.of(222))
-			.withTelemetry("Turret", TelemetryVerbosity.HIGH)
+			.withTelemetry("Turret", GenericConstants.kTelemetryVerbosity)
 			.withStartingPosition(Degrees.of(0))
 			.withMechanismPositionConfig(robotToMechanism)
 			.withMOI(Meters.of(0.25), Pounds.of(4));
 
 		turret = new Pivot(pivotConfig);
 		easyCRTConfig = buildEasyCrtConfig();
-		logCrtConfigTelemetry();
-		SmartDashboard.putBoolean(RERUN_SEED, false);
+		easyCrtSolver = new EasyCRT(easyCRTConfig);
 	}
 
 	/** Build the CRT config */
@@ -130,7 +120,7 @@ public class TurretSubsystem extends SubsystemBase {
 			.withAbsoluteEncoderOffsets(Rotations.of(0), Rotations.of(0))
 			.withAbsoluteEncoderInversions(false, false)
 			.withMechanismRange(Degrees.of(-30), Degrees.of(222))
-			.withMatchTolerance(Rotations.of(0.02))
+			.withMatchTolerance(toleranceAngle)
 			.withCrtGearRecommendationConstraints(1.2, 15, 60, 40);
 	}
 
@@ -172,21 +162,15 @@ public class TurretSubsystem extends SubsystemBase {
 		return getRawAngle().in(edu.wpi.first.units.Units.Radians);
 	}
 
-	/** CRT reseed attempt */
-	public void rerunCrtSeed() {
-		rotorSeededFromAbs = false;
-		SmartDashboard.putNumber("Turret/CRT/ManualRerunTimestampSec", Timer.getFPGATimestamp());
-		attemptRotorSeedFromCANCoders();
-	}
-
 	public void periodic() {
-		if (SmartDashboard.getBoolean(RERUN_SEED, false)) {
-			SmartDashboard.putBoolean(RERUN_SEED, false);
-			rerunCrtSeed();
-		}
-		SmartDashboard.putNumber("Turret/CRT/CurrentPositionDeg", motor.getMechanismPosition().in(Degrees));
-		if (!rotorSeededFromAbs) {
-			attemptRotorSeedFromCANCoders();
+		if (motor.getRotorVelocity().compareTo(threshold) < 0) {
+			// Only update when the mechanism is moving slowly to ensure accurate readings
+			easyCrtSolver
+				.getAngleOptional()
+				.ifPresent(angle -> {
+					// Use the angle for your application
+					motor.setEncoderPosition(angle); // Set the motor's encoder position to the calculated angle
+				});
 		}
 		turret.updateTelemetry();
 	}
@@ -194,108 +178,4 @@ public class TurretSubsystem extends SubsystemBase {
 	public void simulationPeriodic() {
 		turret.simIterate();
 	}
-
-	/**
-	 * Tries to solve turret position via CRT and seed the relative encoder with the result. Reads
-	 * both CANCoder values, runs the solver, updates the SmartMotorController, and publishes CRT
-	 * status to the dashboard.
-	 */
-	private void attemptRotorSeedFromCANCoders() {
-		AbsSensorRead absRead = readAbsSensors();
-		if (!absRead.ok()) {
-			if (!"NO_DEVICES".equals(absRead.status())) {
-				SmartDashboard.putString("Turret/CRT/SeedStatus", absRead.status());
-			}
-			lastSeedStatus = CRTStatus.INVALID_CONFIG;
-			return;
-		}
-
-		double absA = absRead.absA();
-		double absB = absRead.absB();
-
-		EasyCRT solver = new EasyCRT(easyCRTConfig);
-		Optional<Angle> solvedAngle = solver.getAngleOptional();
-
-		SmartDashboard.putNumber("Turret/CRT/AbsA", absA);
-		SmartDashboard.putNumber("Turret/CRT/AbsB", absB);
-		SmartDashboard.putString("Turret/CRT/SolverStatus", solver.getLastStatus().name());
-		SmartDashboard.putNumber("Turret/CRT/SolverErrorRot", solver.getLastErrorRotations());
-		SmartDashboard.putNumber("Turret/CRT/SolverIterations", solver.getLastIterations());
-
-		if (solvedAngle.isEmpty()) {
-			SmartDashboard.putBoolean("Turret/CRT/SolutionFound", false);
-			lastSeedStatus = solver.getLastStatus();
-			return;
-		}
-
-		Angle solvedAngleValue = solvedAngle.get();
-		motor.setEncoderPosition(solvedAngleValue);
-		rotorSeededFromAbs = true;
-		lastSeededTurretDeg = solvedAngleValue.in(Degrees);
-		lastSeedError = solver.getLastErrorRotations();
-
-		SmartDashboard.putBoolean("Turret/CRT/SolutionFound", true);
-		SmartDashboard.putNumber("Turret/CRT/SeededTurretDeg", lastSeededTurretDeg);
-		SmartDashboard.putNumber("Turret/CRT/MatchErrorRot", lastSeedError);
-
-		lastSeedStatus = CRTStatus.OK;
-		SmartDashboard.putString("Turret/CRT/SeedStatus", lastSeedStatus.name());
-		SmartDashboard.putBoolean("Turret/CRT/Seeded", rotorSeededFromAbs);
-	}
-
-	/** Reads both absolute encoders and returns their rotations plus a status. */
-	private AbsSensorRead readAbsSensors() {
-		boolean haveDevices = cancoderA != null && cancoderB != null;
-		if (haveDevices) {
-			StatusCode status = BaseStatusSignal.refreshAll(absPosition1Signal, absPosition2Signal);
-			if (status.isOK()) {
-				return new AbsSensorRead(
-					true,
-					absPosition1Signal.getValue().in(Rotations),
-					absPosition2Signal.getValue().in(Rotations),
-					status.toString()
-				);
-			}
-			return new AbsSensorRead(false, Double.NaN, Double.NaN, status.toString());
-		}
-
-		return new AbsSensorRead(false, Double.NaN, Double.NaN, "NO_DEVICES");
-	}
-
-	/** Publish CRT config-derived values for debugging coverage/ratios. */
-	private void logCrtConfigTelemetry() {
-		double mechanismRangeRot = easyCRTConfig.getMechanismRange().in(Rotations);
-		double uniqueCoverageRot = easyCRTConfig
-			.getUniqueCoverage()
-			.map(angle -> angle.in(Rotations))
-			.orElse(Double.NaN);
-		SmartDashboard.putNumber("Turret/CRT/Config/RatioA", easyCRTConfig.getEncoder1RotationsPerMechanismRotation());
-		SmartDashboard.putNumber("Turret/CRT/Config/RatioB", easyCRTConfig.getEncoder2RotationsPerMechanismRotation());
-		SmartDashboard.putNumber("Turret/CRT/Config/UniqueCoverageRot", uniqueCoverageRot);
-		SmartDashboard.putBoolean("Turret/CRT/Config/CoverageSatisfiesRange", easyCRTConfig.coverageSatisfiesRange());
-		SmartDashboard.putNumber("Turret/CRT/Config/RequiredRangeRot", mechanismRangeRot);
-
-		Optional<CrtGearPair> configPair = easyCRTConfig.getRecommendedCrtGearPair();
-		SmartDashboard.putBoolean("Turret/CRT/Config/RecommendedPairFound", configPair.isPresent());
-		if (configPair.isPresent()) {
-			CrtGearPair pair = configPair.get();
-			SmartDashboard.putNumber("Turret/CRT/Config/Reccomender/RecommendedGearA", pair.gearA());
-			SmartDashboard.putNumber("Turret/CRT/Config/Reccomender/RecommendedGearB", pair.gearB());
-			SmartDashboard.putNumber(
-				"Turret/CRT/Config/Reccomender/RecommendedCoverageRot",
-				pair.coverage().in(Rotations)
-			);
-			SmartDashboard.putNumber("Turret/CRT/Config/Reccomender/RecommendedLcm", pair.lcm());
-			SmartDashboard.putBoolean(
-				"Turret/CRT/Config/Reccomender/RecommendedCoprime",
-				EasyCRTConfig.isCoprime(pair.gearA(), pair.gearB())
-			);
-			SmartDashboard.putNumber(
-				"Turret/CRT/Config/Reccomender/RecommendedIterations",
-				pair.theoreticalIterations()
-			);
-		}
-	}
-
-	private static record AbsSensorRead(boolean ok, double absA, double absB, String status) {}
 }

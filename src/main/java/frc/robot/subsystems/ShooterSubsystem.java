@@ -19,6 +19,7 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.constants.GenericConstants;
 import frc.robot.constants.ShooterConstants;
 import java.util.function.Supplier;
 import yams.gearing.GearBox;
@@ -29,7 +30,6 @@ import yams.motorcontrollers.SmartMotorController;
 import yams.motorcontrollers.SmartMotorControllerConfig;
 import yams.motorcontrollers.SmartMotorControllerConfig.ControlMode;
 import yams.motorcontrollers.SmartMotorControllerConfig.MotorMode;
-import yams.motorcontrollers.SmartMotorControllerConfig.TelemetryVerbosity;
 import yams.motorcontrollers.remote.TalonFXWrapper;
 
 public class ShooterSubsystem extends SubsystemBase {
@@ -47,7 +47,7 @@ public class ShooterSubsystem extends SubsystemBase {
 		.withFeedforward(new SimpleMotorFeedforward(0.0, 0.0111, 0))
 		// .withSimFeedforward(new SimpleMotorFeedforward(0.025, 0.011858, 0))
 		// Telemetry name and verbosity level
-		.withTelemetry("ShooterMotor", TelemetryVerbosity.HIGH)
+		.withTelemetry("ShooterMotor", GenericConstants.kTelemetryVerbosity)
 		// Gearing from the motor rotor to final shaft.
 		// In this example GearBox.fromReductionStages(3,4) is the same as
 		// GearBox.fromStages("3:1","4:1") which corresponds to the gearbox attached to your motor.
@@ -75,7 +75,7 @@ public class ShooterSubsystem extends SubsystemBase {
 		.withUpperSoftLimit(RPM.of(100))
 		.withLowerSoftLimit(RPM.of(0))
 		// Telemetry name and verbosity for the arm.
-		.withTelemetry("Shooter Mech", TelemetryVerbosity.HIGH);
+		.withTelemetry("Shooter Mech", GenericConstants.kTelemetryVerbosity);
 
 	// Shooter Mechanism
 	private FlyWheel shooter = new FlyWheel(shooterConfig);
@@ -96,15 +96,23 @@ public class ShooterSubsystem extends SubsystemBase {
 	 * @return {@link edu.wpi.first.wpilibj2.command.RunCommand}
 	 */
 	public Command setVelocity(AngularVelocity speed) {
+		shooterLeaderMotor.startClosedLoopController();
 		return shooter.setSpeed(speed);
 	}
 
 	public Command setVelocityDynamic(Supplier<AngularVelocity> speed) {
+		shooterLeaderMotor.startClosedLoopController();
 		return shooter.setSpeed(speed);
 	}
 
 	public AngularVelocity getSpeed() {
 		return shooter.getSpeed();
+	}
+
+	public Command stop() {
+		shooterLeaderMotor.stopClosedLoopController();
+		shooterLeaderMotor.setDutyCycle(0);
+		return null;
 	}
 
 	/**
@@ -114,6 +122,7 @@ public class ShooterSubsystem extends SubsystemBase {
 	 * @return {@link edu.wpi.first.wpilibj2.command.RunCommand}
 	 */
 	public Command set(double dutyCycle) {
+		shooterLeaderMotor.startClosedLoopController();
 		return shooter.set(dutyCycle);
 	}
 

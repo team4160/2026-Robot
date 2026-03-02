@@ -2,9 +2,11 @@ package frc.robot.constants;
 
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.wpilibj.DriverStation;
+import yams.motorcontrollers.SmartMotorControllerConfig.TelemetryVerbosity;
 
 public class GenericConstants {
 
+	public static final TelemetryVerbosity kTelemetryVerbosity = TelemetryVerbosity.HIGH;
 	public static boolean disableHAL = false;
 
 	public static void disableHAL() {

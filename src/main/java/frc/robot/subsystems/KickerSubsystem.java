@@ -18,6 +18,7 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.constants.GenericConstants;
 import frc.robot.constants.HopperConstants;
 import yams.gearing.GearBox;
 import yams.gearing.MechanismGearing;
@@ -27,7 +28,6 @@ import yams.motorcontrollers.SmartMotorController;
 import yams.motorcontrollers.SmartMotorControllerConfig;
 import yams.motorcontrollers.SmartMotorControllerConfig.ControlMode;
 import yams.motorcontrollers.SmartMotorControllerConfig.MotorMode;
-import yams.motorcontrollers.SmartMotorControllerConfig.TelemetryVerbosity;
 import yams.motorcontrollers.remote.TalonFXWrapper;
 
 public class KickerSubsystem extends SubsystemBase {
@@ -44,7 +44,7 @@ public class KickerSubsystem extends SubsystemBase {
 		.withFeedforward(new SimpleMotorFeedforward(0.0, 0.345, 0))
 		// .withSimFeedforward(new SimpleMotorFeedforward(0.0, 0.0, 0))
 		// Telemetry name and verbosity level
-		.withTelemetry("KickerMotor", TelemetryVerbosity.HIGH)
+		.withTelemetry("KickerMotor", GenericConstants.kTelemetryVerbosity)
 		// Gearing from the motor rotor to final shaft.
 		// In this example GearBox.fromReductionStages(3,4) is the same as
 		// GearBox.fromStages("3:1","4:1") which corresponds to the gearbox attached to your motor.
@@ -67,7 +67,7 @@ public class KickerSubsystem extends SubsystemBase {
 		.withUpperSoftLimit(RPM.of(34))
 		.withLowerSoftLimit(RPM.of(0))
 		// Telemetry name and verbosity for the arm.
-		.withTelemetry("kickerMech", TelemetryVerbosity.HIGH);
+		.withTelemetry("kickerMech", GenericConstants.kTelemetryVerbosity);
 
 	// Kicker Mechanism
 	private FlyWheel kicker = new FlyWheel(kickerConfig);

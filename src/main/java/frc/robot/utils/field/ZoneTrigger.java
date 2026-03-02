@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.Telemetry;
 import frc.robot.constants.ShotingOnTheFlyConstants;
 import frc.robot.subsystems.SwerveSubsystem;
 import java.awt.geom.Rectangle2D;
@@ -83,7 +84,7 @@ public class ZoneTrigger {
 
 		// Sets the publishing path to the telemetry table in our Telemetry class.
 		/// This should be changed on differing projects.
-		// this.setBothTables(Telemetry.Publishers.Robot.zoneTable);
+		this.setBothTables(Telemetry.Publishers.Robot.zoneTable);
 		this.reloadPublishers(zoneName); // Reloads the publishers with our new tables.
 		this.setPoseSupplier(() ->
 			SwerveSubsystem.SwerveState.CurrentPose.transformBy(ShotingOnTheFlyConstants.robotToTurret.toTransform2d())

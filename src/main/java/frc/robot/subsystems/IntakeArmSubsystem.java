@@ -15,6 +15,7 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.constants.GenericConstants;
 import yams.gearing.GearBox;
 import yams.gearing.MechanismGearing;
 import yams.mechanisms.config.ArmConfig;
@@ -23,7 +24,6 @@ import yams.motorcontrollers.SmartMotorController;
 import yams.motorcontrollers.SmartMotorControllerConfig;
 import yams.motorcontrollers.SmartMotorControllerConfig.ControlMode;
 import yams.motorcontrollers.SmartMotorControllerConfig.MotorMode;
-import yams.motorcontrollers.SmartMotorControllerConfig.TelemetryVerbosity;
 import yams.motorcontrollers.remote.TalonFXWrapper;
 
 public class IntakeArmSubsystem extends SubsystemBase {
@@ -40,12 +40,12 @@ public class IntakeArmSubsystem extends SubsystemBase {
 		.withFeedforward(new ArmFeedforward(0, 0, 0))
 		.withSimFeedforward(new ArmFeedforward(0, 0, 0))
 		// Telemetry name and verbosity level
-		.withTelemetry("Arm Motor", TelemetryVerbosity.HIGH)
+		.withTelemetry("Arm Motor", GenericConstants.kTelemetryVerbosity)
 		// Gearing from the motor rotor to final shaft.
 		// In this example GearBox.fromReductionStages(3,4) is the same as
 		// GearBox.fromStages("3:1","4:1") which corresponds to the gearbox attached to your motor.
 		// You could also use .withGearing(12) which does the same thing.
-		.withGearing(new MechanismGearing(GearBox.fromReductionStages(45)))
+		.withGearing(new MechanismGearing(GearBox.fromStages("38:10")))
 		// Motor properties to prevent over currenting.
 		.withMotorInverted(false)
 		.withIdleMode(MotorMode.BRAKE)
@@ -71,7 +71,7 @@ public class IntakeArmSubsystem extends SubsystemBase {
 		.withLength(Feet.of(3))
 		.withMass(Pounds.of(1))
 		// Telemetry name and verbosity for the arm.
-		.withTelemetry("Arm", TelemetryVerbosity.HIGH);
+		.withTelemetry("Arm", GenericConstants.kTelemetryVerbosity);
 
 	private Arm arm = new Arm(armCfg);
 

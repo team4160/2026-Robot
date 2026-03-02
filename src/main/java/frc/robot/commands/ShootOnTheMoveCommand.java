@@ -17,6 +17,7 @@ import edu.wpi.first.math.interpolation.InverseInterpolator;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.constants.ShotingOnTheFlyConstants;
@@ -197,6 +198,7 @@ public class ShootOnTheMoveCommand extends Command {
 		// }
 
 		double turretToTargetDistance = target.getDistance(turretPosition.getTranslation());
+		SmartDashboard.putNumber("Turret to Target Distance", turretToTargetDistance);
 
 		// Calculate field relative turret velocity
 		ChassisSpeeds robotVelocity = drivetrain.getFieldVelocity();

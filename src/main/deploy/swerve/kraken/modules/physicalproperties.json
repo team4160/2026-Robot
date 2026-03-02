@@ -11,14 +11,14 @@
             "gears": "287:11",
             "factor": 0
         },
-        "drive": {
+        "1drive": {
             "R": 1,
             "diameter": 4,
             "gearRatio": 7.03125,
             "gears": "12:54 32:25 15:30",
             "factor": 0
         },
-        "2drive": {
+        "drive": {
             "R": 2,
             "diameter": 4,
             "gearRatio": 6.026785714286,

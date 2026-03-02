@@ -2,6 +2,8 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Inch;
+import static edu.wpi.first.units.Units.Pound;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Second;
@@ -15,6 +17,7 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.constants.GenericConstants;
 import java.util.function.Supplier;
 import yams.gearing.GearBox;
 import yams.gearing.MechanismGearing;
@@ -24,7 +27,6 @@ import yams.motorcontrollers.SmartMotorController;
 import yams.motorcontrollers.SmartMotorControllerConfig;
 import yams.motorcontrollers.SmartMotorControllerConfig.ControlMode;
 import yams.motorcontrollers.SmartMotorControllerConfig.MotorMode;
-import yams.motorcontrollers.SmartMotorControllerConfig.TelemetryVerbosity;
 import yams.motorcontrollers.local.SparkWrapper;
 
 public class HoodSubsystem extends SubsystemBase {
@@ -34,7 +36,7 @@ public class HoodSubsystem extends SubsystemBase {
 	private final SmartMotorControllerConfig hoodMotorConfig = new SmartMotorControllerConfig(this)
 		.withGearing(new MechanismGearing(GearBox.fromStages("174:12")))
 		.withIdleMode(MotorMode.COAST)
-		.withTelemetry("HoodMotor", TelemetryVerbosity.HIGH)
+		.withTelemetry("HoodMotor", GenericConstants.kTelemetryVerbosity)
 		.withStatorCurrentLimit(Amps.of(40))
 		.withMotorInverted(false)
 		.withClosedLoopRampRate(Seconds.of(0.25))
@@ -47,7 +49,10 @@ public class HoodSubsystem extends SubsystemBase {
 	private final SmartMotorController hoodSMC = new SparkWrapper(hoodMotor, DCMotor.getNeo550(1), hoodMotorConfig);
 
 	private final ArmConfig hoodConfig = new ArmConfig(hoodSMC)
-		.withTelemetry("HoodMech", TelemetryVerbosity.HIGH)
+		.withTelemetry("HoodMech", GenericConstants.kTelemetryVerbosity)
+		.withLength(Inch.of(18))
+		.withMass(Pound.of(3))
+		.withStartingPosition(Degrees.of(0))
 		.withSoftLimits(Degrees.of(5), Degrees.of(35))
 		.withHardLimit(Degrees.of(0), Degrees.of(37)); // The Hood can be modeled as an arm since it has a gravitational force acted upon based on the angle its in
 

@@ -15,6 +15,7 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.constants.GenericConstants;
 import frc.robot.constants.IntakeConstants;
 import yams.gearing.GearBox;
 import yams.gearing.MechanismGearing;
@@ -24,7 +25,6 @@ import yams.motorcontrollers.SmartMotorController;
 import yams.motorcontrollers.SmartMotorControllerConfig;
 import yams.motorcontrollers.SmartMotorControllerConfig.ControlMode;
 import yams.motorcontrollers.SmartMotorControllerConfig.MotorMode;
-import yams.motorcontrollers.SmartMotorControllerConfig.TelemetryVerbosity;
 import yams.motorcontrollers.remote.TalonFXWrapper;
 
 public class IntakeSubsystem extends SubsystemBase {
@@ -41,7 +41,7 @@ public class IntakeSubsystem extends SubsystemBase {
 		.withFeedforward(new SimpleMotorFeedforward(0.02, 0.05, 0))
 		// .withSimFeedforward(new SimpleMotorFeedforward(0, 0, 0))
 		// Telemetry name and verbosity level
-		.withTelemetry("IntakeMotor", TelemetryVerbosity.HIGH)
+		.withTelemetry("IntakeMotor", GenericConstants.kTelemetryVerbosity)
 		// Gearing from the motor rotor to final shaft.
 		// In this example GearBox.fromReductionStages(3,4) is the same as
 		// GearBox.fromStages("3:1","4:1") which corresponds to the gearbox attached to your motor.
@@ -57,13 +57,13 @@ public class IntakeSubsystem extends SubsystemBase {
 
 	private final FlyWheelConfig IntakeConfig = new FlyWheelConfig(IntakeMotor)
 		// Diameter of the flywheel.
-		.withDiameter(Inches.of(4))
+		.withDiameter(Inches.of(0.84))
 		// Mass of the flywheel.
-		.withMass(Pounds.of(1))
+		.withMass(Pounds.of(0.1))
 		// Maximum speed of the shooter.
 		.withUpperSoftLimit(RPM.of(1000))
 		// Telemetry name and verbosity for the arm.
-		.withTelemetry("IntakeWheel", TelemetryVerbosity.HIGH);
+		.withTelemetry("IntakeWheel", GenericConstants.kTelemetryVerbosity);
 
 	// Shooter Mechanism
 	private FlyWheel IntakeWheel = new FlyWheel(IntakeConfig);

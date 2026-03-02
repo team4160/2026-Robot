@@ -32,6 +32,6 @@ public class EqualsUtil {
 	}
 
 	public static double sensitivity(double input, double sensitivity) {
-        return ((sensitivity * input * input * input) + (1 - sensitivity) * input);
-    }
+		return ((sensitivity * input * input * input) + (1 - sensitivity) * input);
+	}
 }
