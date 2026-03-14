@@ -48,9 +48,10 @@ public class SpindexerSubsystem extends SubsystemBase {
 		// You could also use .withGearing(12) which does the same thing.
 		.withGearing(new MechanismGearing(GearBox.fromStages("36:10")))
 		// Motor properties to prevent over currenting.
-		.withMotorInverted(false)
-		.withIdleMode(MotorMode.BRAKE)
-		.withStatorCurrentLimit(Amps.of(40));
+		.withMotorInverted(true)
+		.withIdleMode(MotorMode.COAST)
+		.withSupplyCurrentLimit(Amps.of(50));
+	// .withStatorCurrentLimit(Amps.of(-1));
 
 	// Create our SmartMotorController
 	private SmartMotorController motor = new TalonFXWrapper(spark, DCMotor.getFalcon500(1), smcConfig);

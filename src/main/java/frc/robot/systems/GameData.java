@@ -1,5 +1,7 @@
 package frc.robot.systems;
 
+import java.util.function.BooleanSupplier;
+
 import edu.wpi.first.math.geometry.Rectangle2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -47,6 +49,11 @@ public class GameData {
 			).contains(m_drivebase.getPose().getTranslation())
 		);
 	}
+
+	// public static BooleanSupplier canShootBS() {
+	// 	BooleanSupplier canShoot = () -> canShoot();
+	// 	return canShoot;
+	// }
 
 	public boolean canShoot() {
 		// String gameData;

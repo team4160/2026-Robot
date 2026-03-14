@@ -81,7 +81,7 @@ public class TurretSubsystem extends SubsystemBase {
 			.withSoftLimit(Degrees.of(-30), Degrees.of(222))
 			.withFeedforward(new SimpleMotorFeedforward(0.18, 4.1566, 0.11307))
 			.withGearing(new MechanismGearing(GearBox.fromStages("5:1")))
-			.withIdleMode(MotorMode.COAST)
+			.withIdleMode(MotorMode.BRAKE)
 			.withTelemetry("TurretMotorV2", GenericConstants.kTelemetryVerbosity)
 			.withStatorCurrentLimit(Amps.of(40))
 			// .withSupplyCurrentLimit(Amps.of(40))
@@ -116,7 +116,7 @@ public class TurretSubsystem extends SubsystemBase {
 	/** Build the CRT config */
 	private EasyCRTConfig buildEasyCrtConfig() {
 		return new EasyCRTConfig(absPosition1Signal::getValue, absPosition2Signal::getValue)
-			.withCommonDriveGear(1, 200, 19, 21)
+			.withCommonDriveGear(1, 200, 20, 21)
 			.withAbsoluteEncoderOffsets(Rotations.of(0), Rotations.of(0))
 			.withAbsoluteEncoderInversions(false, false)
 			.withMechanismRange(Degrees.of(-30), Degrees.of(222))

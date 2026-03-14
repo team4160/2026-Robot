@@ -48,7 +48,7 @@ public class IntakeSubsystem extends SubsystemBase {
 		// You could also use .withGearing(12) which does the same thing.
 		.withGearing(new MechanismGearing(GearBox.fromStages("72:24")))
 		// Motor properties to prevent over currenting.
-		.withMotorInverted(false)
+		.withMotorInverted(true)
 		.withIdleMode(MotorMode.COAST)
 		.withStatorCurrentLimit(Amps.of(40));
 

@@ -273,9 +273,9 @@ public class ScoringSystem {
 	 * @param dutyCycle
 	 * @return A command that moves the Arm up with DutyCycle
 	 */
-	public Command armUp(double dutyCycle) {
-		return intakeArm.set(dutyCycle);
-	}
+	// public Command armUp(double dutyCycle) {
+	// 	return intakeArm.set(dutyCycle);
+	// }
 
 	/**
 	 * Command that moves the Arm down using DutyCycle
@@ -283,28 +283,28 @@ public class ScoringSystem {
 	 * @param dutyCycle
 	 * @return A command that moves the Arm down with DutyCycle
 	 */
-	public Command armDown(double dutyCycle) {
-		return intakeArm.set(-dutyCycle);
-	}
+	// public Command armDown(double dutyCycle) {
+	// 	return intakeArm.set(-dutyCycle);
+	// }
 
 	/**
 	 * Command that moves the Arm up and down to specific setpoints using position control
 	 *
 	 * @return A command that moves the Arm up and down to specific setpoints using position control
 	 */
-	public Command useArmToAgitate() {
-		return intakeArm
-			.runToAngle(Degrees.of(-10), Degrees.of(1))
-			.andThen(intakeArm.runToAngle(Degrees.of(-90), Degrees.of(1)));
-	}
+	// public Command useArmToAgitate() {
+	// 	return intakeArm
+	// 		.runToAngle(Degrees.of(-10), Degrees.of(1))
+	// 		.andThen(intakeArm.runToAngle(Degrees.of(-90), Degrees.of(1)));
+	// }
 
-	public Command setIntakeUpAndHold(Angle angle) {
-		return intakeArm.setAngle(angle);
-	}
+	// public Command setIntakeUpAndHold(Angle angle) {
+	// 	return intakeArm.setAngle(angle);
+	// }
 
-	public Command setIntakeDownAndHold(Angle angle) {
-		return intakeArm.setAngle(angle);
-	}
+	// public Command setIntakeDownAndHold(Angle angle) {
+	// 	return intakeArm.setAngle(angle);
+	// }
 
 	public Command spindexerCommand(AngularVelocity velocity) {
 		return spindexer.setVelocity(velocity);
@@ -320,7 +320,8 @@ public class ScoringSystem {
 
 	// TODO this should run the runTo command
 	public Command intakeSetAndStart(Angle angle, double topSpeed, double bottomSpeed) {
-		return intakeArm.setAngle(angle).andThen(intake.set(topSpeed));
+		// return intakeArm.setAngle(angle).andThen(intake.set(topSpeed));
+		return intake.set(topSpeed);
 	}
 
 	public Command shooterAndKicker(AngularVelocity shooterVelocity, AngularVelocity kickerVelocity) {

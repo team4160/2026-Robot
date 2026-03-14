@@ -4,8 +4,6 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.RPM;
-
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.controller.ProfiledPIDController;
@@ -35,6 +33,7 @@ import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.SpindexerSubsystem;
 import frc.robot.subsystems.SwerveSubsystem;
 import frc.robot.subsystems.TurretSubsystem;
+import frc.robot.systems.GameData;
 import frc.robot.systems.ScoringSystem;
 import java.io.File;
 import swervelib.SwerveInputStream;
@@ -170,7 +169,7 @@ public class RobotContainer {
 
 		intake.setDefaultCommand(intake.set(0));
 
-		intakeArm.setDefaultCommand(intakeArm.set(0));
+		// intakeArm.setDefaultCommand(intakeArm.set(0));
 
 		shooter.setDefaultCommand(shooter.set(0));
 
@@ -213,7 +212,7 @@ public class RobotContainer {
 
 			driverXbox.rightBumper().onTrue(Commands.none());
 		} else {
-			driverXbox.a().onTrue((Commands.runOnce(drivebase::zeroGyro)));
+			driverXbox.a().onTrue((Commands.runOnce(drivebase::zeroGyroWithAlliance)));
 			driverXbox.y().whileTrue(Commands.runOnce(drivebase::lock, drivebase).repeatedly());
 		}
 
@@ -221,16 +220,22 @@ public class RobotContainer {
 			.x()
 			.toggleOnTrue(new ShootOnTheMoveCommand(drivebase, scoringSystem).withName("OperatorControls.aimCommand"));
 
-		operatorXbox.a().whileTrue(intake.set(-IntakeConstants.kIntakeDutyCycle));
+		operatorXbox.a().whileTrue(intake.set(IntakeConstants.kIntakeDutyCycle));
 
-		operatorXbox.y().whileTrue(shooter.setVelocity(RPM.of(6250)));
+		// operatorXbox.y().whileTrue(shooter.setVelocity(RPM.of(5900)));
+		// SmartDashboard.putNumber("ShootSpeed", 6900);
+		// operatorXbox.y().and(GameData::canShoot).whileTrue(shooter.setVelocity());
+		operatorXbox.y().whileTrue(shooter.setVelocity());
 
-		operatorXbox.b().whileTrue(spindexer.set(-.85).alongWith(kicker.set(-0.25)));
+		operatorXbox.b().whileTrue(spindexer.set(0.75).alongWith(kicker.set(0.5)));
 
-		operatorXbox.rightTrigger().whileTrue(turret.set(.3));
+		operatorXbox.leftTrigger().whileTrue(intake.set(-IntakeConstants.kIntakeDutyCycle));
 
-		operatorXbox.leftTrigger().whileTrue(turret.set(-.3));
-		operatorXbox.leftBumper().whileTrue(shooter.sysId());
+		// operatorXbox.leftTrigger().whileTrue(turret.set(-.3));
+
+		// operatorXbox.x().whileTrue(intakeArm.set(1)).whileFalse(intakeArm.set(0));
+
+		// operatorXbox.leftBumper().whileTrue(shooter.sysId());
 	}
 
 	/**
