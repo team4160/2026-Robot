@@ -1,7 +1,5 @@
 package frc.robot.systems;
 
-import java.util.function.BooleanSupplier;
-
 import edu.wpi.first.math.geometry.Rectangle2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
