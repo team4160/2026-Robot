@@ -47,7 +47,8 @@ public class TurretSubsystem extends SubsystemBase {
 	private final PivotConfig pivotConfig;
 	private final Pivot turret;
 	private final CANcoder cancoder;
-	private boolean zeroed = false;
+
+	// private boolean zeroed = false;
 
 	public TurretSubsystem() {
 		turretMotor = new TalonFX(TurretConstants.kTurretMotor_ID);
@@ -72,6 +73,9 @@ public class TurretSubsystem extends SubsystemBase {
 			.withMotorInverted(false)
 			// .withStartingPosition(cancoder.getPosition().getValue().times(21 / 200))
 			// .withStartingPosition(Degrees.of(0))
+			.withExternalEncoder(cancoder)
+			.withExternalEncoderGearing(200 / 21)
+			.withUseExternalFeedbackEncoder(true)
 			.withControlMode(ControlMode.CLOSED_LOOP);
 
 		motor = new TalonFXWrapper(turretMotor, DCMotor.getFalcon500(1), motorConfig);
@@ -137,14 +141,14 @@ public class TurretSubsystem extends SubsystemBase {
 	}
 
 	public void periodic() {
-		if (!zeroed) {
-			cancoder.getAbsolutePosition().refresh();
-			if (cancoder.getAbsolutePosition().getValueAsDouble() != 0) {
-				zeroed = true;
-				// motor.setPosition(cancoder.getPosition().getValue().times(21 / 200));
-				turretMotor.setPosition(cancoder.getAbsolutePosition().getValue());
-			}
-		}
+		// if (!zeroed) {
+		// 	cancoder.getAbsolutePosition().refresh();
+		// 	if (cancoder.getAbsolutePosition().getValueAsDouble() != 0) {
+		// 		zeroed = true;
+		// 		// motor.setPosition(cancoder.getPosition().getValue().times(21 / 200));
+		// 		turret.setAngle(cancoder.getAbsolutePosition().getValue());
+		// 	}
+		// }
 		// turretMotor.setPosition(cancoder.getAbsolutePosition().getValue());
 		// turretMotor.setPosition(3);
 		turret.updateTelemetry();
