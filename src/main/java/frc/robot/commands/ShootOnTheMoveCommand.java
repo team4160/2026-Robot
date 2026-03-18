@@ -4,9 +4,11 @@ import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Rotations;
+
+import java.lang.reflect.Field;
+
 import static edu.wpi.first.units.Units.Degrees;
 
-import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -29,20 +31,8 @@ public class ShootOnTheMoveCommand extends Command {
 	private final SwerveSubsystem drivetrain;
 	private final ScoringSystem superstructure;
 
-	private final LinearFilter turretAngleFilter = LinearFilter.movingAverage(
-		(int) (0.1 / ShootingOnTheMoveConstants.loopPeriodSecs)
-	);
-	private final LinearFilter hoodAngleFilter = LinearFilter.movingAverage(
-		(int) (0.1 / ShootingOnTheMoveConstants.loopPeriodSecs)
-	);
-
-	private Rotation2d lastTurretAngle;
-	private double lastHoodAngle;
 	private Rotation2d turretAngle;
-	// Why is it NaN?
-	private double hoodAngle = Double.NaN;
-	private double turretVelocity;
-	private double hoodVelocity;
+	private double hoodAngle;
 
 	public ShootOnTheMoveCommand(SwerveSubsystem drivetrain, ScoringSystem superstructure) {
 		this.drivetrain = drivetrain;
@@ -53,13 +43,13 @@ public class ShootOnTheMoveCommand extends Command {
 	public void initialize() {
 		super.initialize();
 
-		lastHoodAngle = superstructure.getHoodAngle().in(Degrees);
-		lastTurretAngle = Rotation2d.fromRotations(superstructure.getTurretAngle().in(Degrees));
+		hoodAngle = superstructure.getHoodAngle().in(Degrees);
+		turretAngle = Rotation2d.fromRotations(superstructure.getTurretAngle().in(Degrees));
 
 		superstructure.aimDynamicCommand(
 			() -> RPM.of(ShootingOnTheMoveConstants.flywheelRPM),
-			() -> Rotations.of(lastTurretAngle.getRotations()),
-			() -> Rotations.of(lastHoodAngle)
+			() -> Rotations.of(turretAngle.getRotations()),
+			() -> Rotations.of(hoodAngle)
 		).schedule();
 	}
 
@@ -74,19 +64,21 @@ public class ShootOnTheMoveCommand extends Command {
 
 		// Designate desired target
 		Translation2d target = getCurrentTarget();
-
-		// Calculate distance from turret to target
-		Pose2d turretPosition = estimatedPose.transformBy(ShootingOnTheMoveConstants.robotToTurret.toTransform2d());
-		double turretToTargetDistance = target.getDistance(turretPosition.getTranslation());
-		SmartDashboard.putNumber("Turret to Target Distance", turretToTargetDistance);
-
-		// Calculate field relative chassis velocity
 		ChassisSpeeds chassisVel = drivetrain.getFieldVelocity();
+		Pose2d turretPosition = estimatedPose.transformBy(ShootingOnTheMoveConstants.robotToTurret.toTransform2d());
+		
+		// double turretToTargetDistance = target.getDistance(turretPosition.getTranslation());
+		// SmartDashboard.putNumber("Turret to Target Distance", turretToTargetDistance);
 
 		// Kinematic approach
 		aimHandler(turretPosition, target, chassisVel);
 
-		AngularVelocity desiredRPM = isReadyToShoot() ? RPM.of(ShootingOnTheMoveConstants.flywheelRPM) : RPM.of(0);
+		AngularVelocity desiredRPM = inScoringZone()
+			? RPM.of(ShootingOnTheMoveConstants.flywheelRPM)
+			: RPM.of(ShootingOnTheMoveConstants.flywheelNeutralZoneRPM);
+
+		// shoot fuel slower when hoarding
+		// to avoid accidentally bouncing some out of bounds.
 
 		superstructure.setShooterSetpoints(
 			desiredRPM,
@@ -108,28 +100,14 @@ public class ShootOnTheMoveCommand extends Command {
 			ScoringSystem.CustomTriggers.bumpZone.getTrigger().getAsBoolean();
 	}
 
-	private boolean isReadyToShoot() {
-		return inScoringZone();  // require "&& the angle is satisfactory"? or does it just update quick enough...
-	}
-
 	public void aimHandler(Pose2d turretPose, Translation2d target, ChassisSpeeds chassisVel) {
 		if (inLeftNeutralZone() || inRightNeutralZone()) {
-			hoardFuelInZoneAim(turretPose, chassisVel);
+			kinematicLaunchingParametersAim(turretPose, target, chassisVel, ShootingOnTheMoveConstants.flywheelNeutralZoneRPM);
 			return;
 		}
 
 		// Kinematic approach
-		kinematicLaunchingParametersAim(turretPose, target, chassisVel);
-	}
-
-	public void hoardFuelInZoneAim(Pose2d turretPose, ChassisSpeeds chassisVel) {
-		double y = 3.0;
-		if (turretPose.getTranslation().getY() < 0) {
-			y *= -1.0;
-		}
-		Translation2d target = new Translation2d(-5.0, y);
-
-		kinematicLaunchingParametersAim(turretPose, target, chassisVel);
+		kinematicLaunchingParametersAim(turretPose, target, chassisVel, ShootingOnTheMoveConstants.flywheelRPM);
 	}
 
 	private Pose2d estimatePoseWithPhaseDelay() {
@@ -147,11 +125,12 @@ public class ShootOnTheMoveCommand extends Command {
 			return AllianceFlipUtil.apply(FieldConstants.Hub.topCenterPoint.toTranslation2d());
 		}
 		else if (inLeftNeutralZone()) {
-			// magic numbers?
-			return AllianceFlipUtil.apply(FieldConstants.LeftBump.nearRightCorner.plus(new Translation2d(0, Inches.of(36.5).in(Meters))));
+			// aiming towards our left bump
+			return AllianceFlipUtil.apply(FieldConstants.LeftBump.nearLeftCorner);
 		}
 		else if (inRightNeutralZone()) {
-			return AllianceFlipUtil.apply(FieldConstants.RightBump.nearRightCorner.plus(new Translation2d(0, Inches.of(36.5).in(Meters))));
+			// or our right, depending on NZ placement
+			return AllianceFlipUtil.apply(FieldConstants.RightBump.nearRightCorner);
 		}
 		else {
 			return AllianceFlipUtil.apply(FieldConstants.Hub.topCenterPoint.toTranslation2d());
@@ -175,10 +154,9 @@ public class ShootOnTheMoveCommand extends Command {
 
 	// MY IDEA: Kinematics?
 	// After watching some FRC footage, I noticed our shooting was kind of weak
-	// I watched some clips from an FRC Istanbul regional final this year, and noticed their arc was forgivably parabolic.
-	// Hopefully this helps.
-	private void kinematicLaunchingParametersAim(Pose2d turretPose, Translation2d target, ChassisSpeeds chassisVel) {
-		double v0 = ShootingOnTheMoveConstants.flywheelRPM * (2 * Math.PI / 60.0) * ShootingOnTheMoveConstants.flywheelRadiusMeters;  // m/s, maybe this needs an efficiency factor
+	// I watched some clips from a 2026 FRC Istanbul regional final, and noticed their arc was forgivably parabolic.
+	private void kinematicLaunchingParametersAim(Pose2d turretPose, Translation2d target, ChassisSpeeds chassisVel, double desiredRPM) {
+		double v0 = desiredRPM * (Math.PI / 30.0) * ShootingOnTheMoveConstants.flywheelRadiusMeters;  // m/s, maybe this needs an efficiency factor
 		
 		double dx = target.getX() - turretPose.getTranslation().getX();
 		double dy = target.getY() - turretPose.getTranslation().getY();
@@ -207,17 +185,6 @@ public class ShootOnTheMoveCommand extends Command {
 
 		Pose2d robotPose = drivetrain.getPose();
 		turretAngle = new Translation2d(adx, ady).getAngle().minus(robotPose.getRotation());
-
-		// why is this necessary for every loop?  why not on init?
-		if (lastTurretAngle == null) lastTurretAngle = turretAngle;
-		if (Double.isNaN(lastHoodAngle)) lastHoodAngle = hoodAngle;
-
-		// Should these be abstracted into two calls of one "calcFilteredDerivative" function?
-		turretVelocity = turretAngleFilter.calculate((turretAngle.minus(lastTurretAngle)).getRadians() / ShootingOnTheMoveConstants.loopPeriodSecs);
-		hoodVelocity = hoodAngleFilter.calculate((hoodAngle - lastHoodAngle) / ShootingOnTheMoveConstants.loopPeriodSecs);
-
-		lastTurretAngle = turretAngle;
-		lastHoodAngle = hoodAngle;
 	}
 
 }
