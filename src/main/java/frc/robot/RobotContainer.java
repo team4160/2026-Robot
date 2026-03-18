@@ -5,6 +5,7 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.RPM;
+import static edu.wpi.first.units.Units.Degrees;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
@@ -37,6 +38,7 @@ import frc.robot.subsystems.SpindexerSubsystem;
 import frc.robot.subsystems.SwerveSubsystem;
 import frc.robot.subsystems.TurretSubsystem;
 import frc.robot.systems.ScoringSystem;
+import frc.robot.utils.EqualsUtil;
 import java.io.File;
 import swervelib.SwerveInputStream;
 
@@ -85,10 +87,10 @@ public class RobotContainer {
 	 */
 	SwerveInputStream driveAngularVelocity = SwerveInputStream.of(
 		drivebase.getSwerveDrive(),
-		() -> driverXbox.getLeftY(),
-		() -> driverXbox.getLeftX()
+		() -> EqualsUtil.sensitivity(driverXbox.getLeftY(), 0.75),
+		() -> EqualsUtil.sensitivity(driverXbox.getLeftX(), 0.75)
 	)
-		.withControllerRotationAxis(() -> driverXbox.getRightX() * -1)
+		.withControllerRotationAxis(() -> EqualsUtil.sensitivity(-driverXbox.getRightX(), 0.75))
 		.deadband(OperatorConstants.DEADBAND)
 		.scaleTranslation(0.8)
 		.allianceRelativeControl(true);
@@ -139,8 +141,9 @@ public class RobotContainer {
 
 		// Have the autoChooser pull in all PathPlanner autos as options
 		autoChooser = AutoBuilder.buildAutoChooser();
-		autoChooser.setDefaultOption("Ball Hoard", AutoBuilder.buildAuto("HoardAuto"));
-		autoChooser.addOption("Scatter Fuel", AutoBuilder.buildAuto("AgroSmash"));
+		//Attila: you shouldn't need these, buildAutoChooser should autopopulate all Pathplanner Autos
+		// autoChooser.setDefaultOption("Ball Hoard", AutoBuilder.buildAuto("HoardAuto"));
+		// autoChooser.addOption("Scatter Fuel", AutoBuilder.buildAuto("AgroSmash"));
 
 		// We
 		// Need
@@ -197,7 +200,7 @@ public class RobotContainer {
 
 		intake.setDefaultCommand(intake.set(0));
 
-		intakeArm.setDefaultCommand(intakeArm.set(0));
+		intakeArm.setDefaultCommand(intakeArm.setAngle(Degrees.of(30)));
 
 		shooter.setDefaultCommand(shooter.set(0));
 
@@ -205,9 +208,9 @@ public class RobotContainer {
 
 		kicker.setDefaultCommand(kicker.set(0));
 
-		turret.setDefaultCommand(turret.set(0));
+		turret.setDefaultCommand(turret.setAngle(Degrees.of(0)));
 
-		hood.setDefaultCommand(hood.setDutyCycle(0));
+		hood.setDefaultCommand(hood.setAngle(Degrees.of(0)));
 
 		if (Robot.isSimulation()) {
 			Pose2d target = new Pose2d(new Translation2d(1, 4), Rotation2d.fromDegrees(90));
@@ -240,7 +243,7 @@ public class RobotContainer {
 
 			driverXbox.rightBumper().onTrue(Commands.none());
 		} else {
-			driverXbox.a().onTrue((Commands.runOnce(drivebase::zeroGyro)));
+			driverXbox.a().onTrue((Commands.runOnce(drivebase::zeroGyroWithAlliance)));
 			driverXbox.y().whileTrue(Commands.runOnce(drivebase::lock, drivebase).repeatedly());
 		}
 
@@ -253,6 +256,7 @@ public class RobotContainer {
 		operatorXbox.axisGreaterThan(1, 0.2).whileTrue(intake.set(-IntakeConstants.kIntakeDutyCycle));
 
 		// manual revving  (suboptimal?)
+		// Attila: rather use linear velocity over angular velocity like FeetPerSecond or MetersPerSecond
 		operatorXbox.y().whileTrue(shooter.setVelocity(RPM.of(ShootingOnTheMoveConstants.flywheelRPM)));
 
 		// send the fuel through  (triggers the fuel shooting)
@@ -262,8 +266,6 @@ public class RobotContainer {
 		operatorXbox.axisGreaterThan(4,0.2).whileTrue(turret.set(.3));
 		// right stick X-ax left
 		operatorXbox.axisLessThan(4, -0.2).whileTrue(turret.set(-.3));
-
-		operatorXbox.leftBumper().whileTrue(shooter.sysId());
 	}
 
 	/**
