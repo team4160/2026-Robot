@@ -4,7 +4,7 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.RPM;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
@@ -24,13 +24,19 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.commands.ShootOnTheMoveCommand;
+import frc.robot.constants.IntakeConstants;
 import frc.robot.constants.OperatorConstants;
+import frc.robot.constants.ShootingOnTheMoveConstants;
 import frc.robot.subsystems.HoodSubsystem;
+import frc.robot.subsystems.IntakeArmSubsystem;
+import frc.robot.subsystems.IntakeSubsystem;
+import frc.robot.subsystems.KickerSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.SpindexerSubsystem;
 import frc.robot.subsystems.SwerveSubsystem;
 import frc.robot.subsystems.TurretSubsystem;
-import frc.robot.utils.EqualsUtil;
+import frc.robot.systems.ScoringSystem;
 import java.io.File;
 import swervelib.SwerveInputStream;
 
@@ -57,21 +63,21 @@ public class RobotContainer {
 	private final ShooterSubsystem shooter = new ShooterSubsystem();
 	private final TurretSubsystem turret = new TurretSubsystem();
 	private final HoodSubsystem hood = new HoodSubsystem();
-	// private final IntakeSubsystem intake = new IntakeSubsystem();
-	// private final IntakeArmSubsystem intakeArm = new IntakeArmSubsystem();
-	// private final KickerSubsystem kicker = new KickerSubsystem();
+	private final IntakeSubsystem intake = new IntakeSubsystem();
+	private final IntakeArmSubsystem intakeArm = new IntakeArmSubsystem();
+	private final KickerSubsystem kicker = new KickerSubsystem();
 	private final SpindexerSubsystem spindexer = new SpindexerSubsystem();
 
-	// final ScoringSystem scoringSystem = new ScoringSystem(
-	// 	shooter,
-	// 	turret,
-	// 	hood,
-	// 	drivebase,
-	// 	intake,
-	// 	intakeArm,
-	// 	kicker,
-	// 	spindexer
-	// );
+	final ScoringSystem scoringSystem = new ScoringSystem(
+		shooter,
+		turret,
+		hood,
+		drivebase,
+		intake,
+		intakeArm,
+		kicker,
+		spindexer
+	);
 
 	/**
 	 * Converts driver input into a field-relative ChassisSpeeds that is controlled by angular
@@ -79,10 +85,10 @@ public class RobotContainer {
 	 */
 	SwerveInputStream driveAngularVelocity = SwerveInputStream.of(
 		drivebase.getSwerveDrive(),
-		() -> EqualsUtil.sensitivity(driverXbox.getLeftY(), 0.75),
-		() -> EqualsUtil.sensitivity(driverXbox.getLeftX(), 0.75)
+		() -> driverXbox.getLeftY(),
+		() -> driverXbox.getLeftX()
 	)
-		.withControllerRotationAxis(() -> EqualsUtil.sensitivity(-driverXbox.getRightX(), 0.75))
+		.withControllerRotationAxis(() -> driverXbox.getRightX() * -1)
 		.deadband(OperatorConstants.DEADBAND)
 		.scaleTranslation(0.8)
 		.allianceRelativeControl(true);
@@ -163,15 +169,15 @@ public class RobotContainer {
 			drivebase.setDefaultCommand(driveFieldOrientedAnglularVelocity);
 		}
 
-		// intake.setDefaultCommand(intake.set(0));
+		intake.setDefaultCommand(intake.set(0));
 
-		// intakeArm.setDefaultCommand(intakeArm.set(0));
+		intakeArm.setDefaultCommand(intakeArm.set(0));
 
 		shooter.setDefaultCommand(shooter.set(0));
 
 		spindexer.setDefaultCommand(spindexer.set(0));
 
-		// kicker.setDefaultCommand(kicker.set(0));
+		kicker.setDefaultCommand(kicker.set(0));
 
 		turret.setDefaultCommand(turret.set(0));
 
@@ -208,30 +214,30 @@ public class RobotContainer {
 
 			driverXbox.rightBumper().onTrue(Commands.none());
 		} else {
-			driverXbox.a().onTrue((Commands.runOnce(drivebase::zeroGyroWithAlliance)));
+			driverXbox.a().onTrue((Commands.runOnce(drivebase::zeroGyro)));
 			driverXbox.y().whileTrue(Commands.runOnce(drivebase::lock, drivebase).repeatedly());
 		}
 
-		// driverXbox
-		// 	.x()
-		// 	.toggleOnTrue(new ShootOnTheMoveCommand(drivebase, scoringSystem).withName("OperatorControls.aimCommand"));
+		// when driver holds left trigger:  enable auto-aim, basically
+		driverXbox
+			.leftTrigger()
+			.whileTrue(new ShootOnTheMoveCommand(drivebase, scoringSystem).withName("OperatorControls.aimCommand"));
 
-		// operatorXbox.a().whileTrue(intake.set(IntakeConstants.kIntakeDutyCycle));
+		// when op points left stick Y-ax up,  take in fuel
+		operatorXbox.axisGreaterThan(1, 0.2).whileTrue(intake.set(-IntakeConstants.kIntakeDutyCycle));
 
-		// operatorXbox.y().whileTrue(shooter.setVelocity(RPM.of(5900)));
-		// SmartDashboard.putNumber("ShootSpeed", 6900);
-		// operatorXbox.y().and(GameData::canShoot).whileTrue(shooter.setVelocity());
-		operatorXbox.y().whileTrue(shooter.setVelocity());
+		// manual revving  (suboptimal?)
+		operatorXbox.y().whileTrue(shooter.setVelocity(RPM.of(ShootingOnTheMoveConstants.flywheelRPM)));
 
-		operatorXbox.b().whileTrue(spindexer.set(0.75)); //.alongWith(kicker.set(0.5)));
+		// send the fuel through  (triggers the fuel shooting)
+		operatorXbox.rightTrigger().whileTrue(spindexer.set(-.85).alongWith(kicker.set(-0.25)));
 
-		// operatorXbox.leftTrigger().whileTrue(intake.set(-IntakeConstants.kIntakeDutyCycle));
+		// right stick X-ax right
+		operatorXbox.axisGreaterThan(4,0.2).whileTrue(turret.set(.3));
+		// right stick X-ax left
+		operatorXbox.axisLessThan(4, -0.2).whileTrue(turret.set(-.3));
 
-		operatorXbox.leftTrigger().whileTrue(turret.setAngle(Degrees.of(30)));
-
-		// operatorXbox.x().whileTrue(intakeArm.set(1)).whileFalse(intakeArm.set(0));
-
-		// operatorXbox.leftBumper().whileTrue(shooter.sysId());
+		operatorXbox.leftBumper().whileTrue(shooter.sysId());
 	}
 
 	/**
