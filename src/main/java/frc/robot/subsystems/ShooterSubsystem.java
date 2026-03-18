@@ -17,7 +17,6 @@ import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.GenericConstants;
@@ -101,12 +100,6 @@ public class ShooterSubsystem extends SubsystemBase {
 		return shooter.setSpeed(speed);
 	}
 
-	public Command setVelocity() {
-		shooterLeaderMotor.startClosedLoopController();
-		AngularVelocity speed = RPM.of(SmartDashboard.getNumber("ShootSpeed", 5600));
-		return shooter.setSpeed(speed);
-	}
-
 	public Command setVelocityDynamic(Supplier<AngularVelocity> speed) {
 		shooterLeaderMotor.startClosedLoopController();
 		return shooter.setSpeed(speed);
@@ -142,10 +135,7 @@ public class ShooterSubsystem extends SubsystemBase {
 	}
 
 	/** Creates a new ExampleSubsystem. */
-	public ShooterSubsystem() {
-		// shooterFollower.getConfigurator().apply((TalonFXConfiguration) shooterLeaderMotor.getMotorControllerConfig());
-		// shooterFollower.getConfigurator().apply(shooterLeader.getConfigurator().)
-	}
+	public ShooterSubsystem() {}
 
 	@Override
 	public void periodic() {
