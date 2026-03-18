@@ -15,12 +15,10 @@ public class ShootingOnTheMoveConstants {
 		new Rotation3d(0, 0, 180)
 	);
 
-	public static final double minDistance  = 1.34;
-	public static final double maxDistance  = 5.60;
 	public static final double phaseDelay   = 0.03;
 	public static final double flywheelRPM  = 2000.0;
+	public static final double flywheelNeutralZoneRPM = 1000.0;
 	public static final double flywheelRadiusMeters = Inches.of(2).in(Meters);
-	public static final double loopPeriodSecs = 0.01;
 	public static final double gAcceleration = 9.81;
 	public static final int aimIterations = 2;  // must be >= 1; for accurate shooting on the move. 
 }
