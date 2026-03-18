@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Degree;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Feet;
 import static edu.wpi.first.units.Units.Pounds;
@@ -11,14 +12,15 @@ import static edu.wpi.first.units.Units.Volts;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.SensorDirectionValue;
 import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.GenericConstants;
-import frc.robot.constants.TurretConstants;
 import yams.gearing.GearBox;
 import yams.gearing.MechanismGearing;
 import yams.mechanisms.config.ArmConfig;
@@ -38,11 +40,11 @@ public class IntakeArmSubsystem extends SubsystemBase {
 	private SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
 		.withControlMode(ControlMode.CLOSED_LOOP)
 		// Feedback Constants (PID Constants)
-		.withClosedLoopController(1, 0, 0) // , DegreesPerSecond.of(30), DegreesPerSecondPerSecond.of(45))
-		.withSimClosedLoopController(35, 0, 0) // , DegreesPerSecond.of(90), DegreesPerSecondPerSecond.of(45))
+		.withClosedLoopController(25, 1, 1) // , DegreesPerSecond.of(30), DegreesPerSecondPerSecond.of(45))
+		// .withSimClosedLoopController(35, 0, 0) // , DegreesPerSecond.of(90), DegreesPerSecondPerSecond.of(45))
 		// Feedforward Constants
-		.withFeedforward(new ArmFeedforward(0, 0, 0))
-		.withSimFeedforward(new ArmFeedforward(0, 0, 0))
+		.withFeedforward(new ArmFeedforward(0.1, 0.45, 25))
+		// .withSimFeedforward(new ArmFeedforward(0, 0, 0))
 		// Telemetry name and verbosity level
 		.withTelemetry("Arm Motor", GenericConstants.kTelemetryVerbosity)
 		// Gearing from the motor rotor to final shaft.
@@ -50,13 +52,14 @@ public class IntakeArmSubsystem extends SubsystemBase {
 		// GearBox.fromStages("3:1","4:1") which corresponds to the gearbox attached to your motor.
 		// You could also use .withGearing(12) which does the same thing.
 		.withExternalEncoder(cancoder)
-		.withGearing(new MechanismGearing(GearBox.fromStages("38:10")))
+		.withUseExternalFeedbackEncoder(true)
+		.withGearing(new MechanismGearing(GearBox.fromStages("38:10", "7:1")))
 		// Motor properties to prevent over currenting.
 		.withMotorInverted(false)
 		.withIdleMode(MotorMode.BRAKE)
 		.withStatorCurrentLimit(Amps.of(40))
-		.withClosedLoopRampRate(Seconds.of(0.25))
-		.withOpenLoopRampRate(Seconds.of(0.25))
+		// .withClosedLoopRampRate(Seconds.of(0.25))
+		// .withOpenLoopRampRate(Seconds.of(0.25))
 		.withFollowers(Pair.of(armFollower, true));
 
 	private SmartMotorController SmartMotorController = new TalonFXWrapper(
@@ -67,11 +70,11 @@ public class IntakeArmSubsystem extends SubsystemBase {
 
 	private ArmConfig armCfg = new ArmConfig(SmartMotorController)
 		// Soft limit is applied to the SmartMotorControllers PID
-		.withSoftLimits(Degrees.of(-100), Degrees.of(0))
+		.withSoftLimits(Degrees.of(0), Degrees.of(92))
 		// Hard limit is applied to the simulation.
-		.withHardLimit(Degrees.of(-110), Degrees.of(10))
+		.withHardLimit(Degrees.of(0), Degrees.of(94))
 		// Starting position is where your arm starts
-		.withStartingPosition(Degrees.of(0))
+		// .withStartingPosition(Degrees.of(0))
 		// Length and mass of your arm for sim.
 		.withLength(Feet.of(3))
 		.withMass(Pounds.of(1))
@@ -118,7 +121,8 @@ public class IntakeArmSubsystem extends SubsystemBase {
 
 	public IntakeArmSubsystem() {
 		CANcoderConfiguration cancoderConfiguration = new CANcoderConfiguration();
-		cancoderConfiguration.MagnetSensor.MagnetOffset = TurretConstants.encOffset;
+		cancoderConfiguration.MagnetSensor.MagnetOffset = -0.071044921875;
+		cancoderConfiguration.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive;
 		cancoder.getConfigurator().apply(cancoderConfiguration);
 		cancoder.getPosition().refresh();
 	}
@@ -149,6 +153,7 @@ public class IntakeArmSubsystem extends SubsystemBase {
 	@Override
 	public void periodic() {
 		// This method will be called once per scheduler run
+		SmartDashboard.putNumber("arm angle", arm.getAngle().in(Degree));
 		arm.updateTelemetry();
 	}
 

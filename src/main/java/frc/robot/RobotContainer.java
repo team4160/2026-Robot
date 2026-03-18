@@ -26,6 +26,9 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.constants.OperatorConstants;
 import frc.robot.subsystems.HoodSubsystem;
+import frc.robot.subsystems.IntakeArmSubsystem;
+import frc.robot.subsystems.IntakeSubsystem;
+import frc.robot.subsystems.KickerSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.SpindexerSubsystem;
 import frc.robot.subsystems.SwerveSubsystem;
@@ -57,9 +60,9 @@ public class RobotContainer {
 	private final ShooterSubsystem shooter = new ShooterSubsystem();
 	private final TurretSubsystem turret = new TurretSubsystem();
 	private final HoodSubsystem hood = new HoodSubsystem();
-	// private final IntakeSubsystem intake = new IntakeSubsystem();
-	// private final IntakeArmSubsystem intakeArm = new IntakeArmSubsystem();
-	// private final KickerSubsystem kicker = new KickerSubsystem();
+	private final IntakeSubsystem intake = new IntakeSubsystem();
+	private final IntakeArmSubsystem intakeArm = new IntakeArmSubsystem();
+	private final KickerSubsystem kicker = new KickerSubsystem();
 	private final SpindexerSubsystem spindexer = new SpindexerSubsystem();
 
 	// final ScoringSystem scoringSystem = new ScoringSystem(
@@ -163,15 +166,15 @@ public class RobotContainer {
 			drivebase.setDefaultCommand(driveFieldOrientedAnglularVelocity);
 		}
 
-		// intake.setDefaultCommand(intake.set(0));
+		intake.setDefaultCommand(intake.set(0));
 
-		// intakeArm.setDefaultCommand(intakeArm.set(0));
+		intakeArm.setDefaultCommand(intakeArm.setAngle(Degrees.of(30)));
 
 		shooter.setDefaultCommand(shooter.set(0));
 
 		spindexer.setDefaultCommand(spindexer.set(0));
 
-		// kicker.setDefaultCommand(kicker.set(0));
+		kicker.setDefaultCommand(kicker.set(0));
 
 		turret.setDefaultCommand(turret.setAngle(Degrees.of(0)));
 
