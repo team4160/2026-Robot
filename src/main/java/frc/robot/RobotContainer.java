@@ -135,14 +135,40 @@ public class RobotContainer {
 		// Create the NamedCommands that will be used in PathPlanner
 		NamedCommands.registerCommand("test", Commands.print("I EXIST"));
 
+		RegisterAutos();
+
 		// Have the autoChooser pull in all PathPlanner autos as options
 		autoChooser = AutoBuilder.buildAutoChooser();
+		autoChooser.setDefaultOption("Ball Hoard", AutoBuilder.buildAuto("HoardAuto"));
+		autoChooser.addOption("Scatter Fuel", AutoBuilder.buildAuto("AgroSmash"));
+
+		// We
+		// Need
+		// More
+		// Autos
 
 		// Add a simple auto option to have the robot drive forward for 1 second then stop
 		autoChooser.addOption("Drive Forward", drivebase.driveForward().withTimeout(1));
 
 		// Put the autoChooser on the SmartDashboard
 		SmartDashboard.putData("Auto Chooser", autoChooser);
+	}
+
+	private void RegisterAutos() {
+		// these two are all we really need
+
+		NamedCommands.registerCommand("intake", 
+			intake.set(-IntakeConstants.kIntakeDutyCycle)
+			.andThen(
+				intake.set(IntakeConstants.kIntakeDutyCycle)
+			)
+		);
+		NamedCommands.registerCommand("aimOnMove", 
+			new ShootOnTheMoveCommand(drivebase, scoringSystem).withName("OperatorControls.aimCommand")
+			.alongWith(
+				spindexer.set(-.85).alongWith(kicker.set(-0.25)).withTimeout(0.5)
+			)
+		);
 	}
 
 	/**
