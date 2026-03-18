@@ -49,8 +49,6 @@ public class TurretSubsystem extends SubsystemBase {
 	private final Pivot turret;
 	private final CANcoder cancoder;
 
-	// private boolean zeroed = false;
-
 	public TurretSubsystem() {
 		turretMotor = new TalonFX(TurretConstants.kTurretMotor_ID);
 
@@ -67,7 +65,7 @@ public class TurretSubsystem extends SubsystemBase {
 			// .withSimClosedLoopController(130, 0, 3.4, DegreesPerSecond.of(1000), DegreesPerSecondPerSecond.of(1500))
 			// .withFeedforward(new SimpleMotorFeedforward(0.18, 4.0, 0.11307))
 			.withGearing(new MechanismGearing(GearBox.fromStages("5:1", "200:20")))
-			.withIdleMode(MotorMode.COAST)
+			.withIdleMode(MotorMode.BRAKE)
 			.withTelemetry("TurretMotorV2", GenericConstants.kTelemetryVerbosity)
 			// .withStatorCurrentLimit(Amps.of(40))
 			.withSupplyCurrentLimit(Amps.of(40))
@@ -86,17 +84,15 @@ public class TurretSubsystem extends SubsystemBase {
 			.withMaxRobotLength(Inches.of(12))
 			.withRelativePosition(
 				new Translation3d(
-					Inches.of(-5.3), // back from robot center
-					Inches.of(4.4), // centered left/right
-					Inches.of(11) // up from the floor reference
+					Inches.of(-4.5), // back from robot center
+					Inches.of(-4.5), // centered left/right
+					Inches.of(27) // up from the floor reference
 				)
 			);
 
 		pivotConfig = new PivotConfig(motor)
 			.withHardLimit(Degrees.of(-30), Degrees.of(222))
 			.withTelemetry("Turret", GenericConstants.kTelemetryVerbosity)
-			// .withStartingPosition(cancoder.getPosition().getValue().times(21 / 200))
-			// .withStartingPosition(Degrees.of(0))
 			.withMechanismPositionConfig(robotToMechanism)
 			.withMOI(Meters.of(0.25), Pounds.of(4));
 
@@ -142,16 +138,6 @@ public class TurretSubsystem extends SubsystemBase {
 	}
 
 	public void periodic() {
-		// if (!zeroed) {
-		// 	cancoder.getAbsolutePosition().refresh();
-		// 	if (cancoder.getAbsolutePosition().getValueAsDouble() != 0) {
-		// 		zeroed = true;
-		// 		// motor.setPosition(cancoder.getPosition().getValue().times(21 / 200));
-		// 		turret.setAngle(cancoder.getAbsolutePosition().getValue());
-		// 	}
-		// }
-		// turretMotor.setPosition(cancoder.getAbsolutePosition().getValue());
-		// turretMotor.setPosition(3);
 		SmartDashboard.putNumber("turret angle", turret.getAngle().in(Degree));
 		turret.updateTelemetry();
 	}
