@@ -12,7 +12,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Telemetry;
-import frc.robot.constants.ShotingOnTheFlyConstants;
+import frc.robot.constants.ShootingOnTheMoveConstants;
 import frc.robot.subsystems.SwerveSubsystem;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
@@ -87,7 +87,7 @@ public class ZoneTrigger {
 		this.setBothTables(Telemetry.Publishers.Robot.zoneTable);
 		this.reloadPublishers(zoneName); // Reloads the publishers with our new tables.
 		this.setPoseSupplier(() ->
-			SwerveSubsystem.SwerveState.CurrentPose.transformBy(ShotingOnTheFlyConstants.robotToTurret.toTransform2d())
+			SwerveSubsystem.SwerveState.CurrentPose.transformBy(ShootingOnTheMoveConstants.robotToTurret.toTransform2d())
 		);
 
 		// Sets the trigger telling when our robot is within the zone.
