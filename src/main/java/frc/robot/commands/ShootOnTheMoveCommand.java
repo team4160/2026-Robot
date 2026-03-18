@@ -38,6 +38,7 @@ public class ShootOnTheMoveCommand extends Command {
 	public ShootOnTheMoveCommand(SwerveSubsystem drivetrain, ScoringSystem superstructure) {
 		this.drivetrain = drivetrain;
 		this.superstructure = superstructure;
+		addRequirements(superstructure.shooter, superstructure.turret, superstructure.hood);
 	}
 
 	// create it so it can be init'ed and ended.
