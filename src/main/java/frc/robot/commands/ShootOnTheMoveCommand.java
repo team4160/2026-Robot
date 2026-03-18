@@ -17,6 +17,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.constants.ShootingOnTheMoveConstants;
 import frc.robot.subsystems.SwerveSubsystem;
 import frc.robot.systems.ScoringSystem;
@@ -39,6 +40,8 @@ public class ShootOnTheMoveCommand extends Command {
 		this.superstructure = superstructure;
 	}
 
+	// create it so it can be init'ed and ended.
+	private Command aimDynamicInstance;
 	@Override
 	public void initialize() {
 		super.initialize();
@@ -46,11 +49,29 @@ public class ShootOnTheMoveCommand extends Command {
 		hoodAngle = superstructure.getHoodAngle().in(Degrees);
 		turretAngle = Rotation2d.fromRotations(superstructure.getTurretAngle().in(Degrees));
 
-		superstructure.aimDynamicCommand(
-			() -> RPM.of(ShootingOnTheMoveConstants.flywheelRPM),
-			() -> Rotations.of(turretAngle.getRotations()),
-			() -> Rotations.of(hoodAngle)
-		).schedule();
+		superstructure.setShooterSetpoints(
+			RPM.of(0.0),
+			Rotations.of(turretAngle.getRotations()),
+			Rotations.of(hoodAngle)
+		);
+
+		// Command.schedule is deprecated
+		// now have to use CommandScheduler.getInstance.schedule(cmd(...).asProxy());
+
+		aimDynamicInstance = superstructure.aimDynamicCommand(
+								superstructure::getTargetShooterSpeed,
+								superstructure::getTargetTurretAngle,
+								superstructure::getTargetHoodAngle
+							).asProxy();
+
+		CommandScheduler.getInstance().schedule(aimDynamicInstance);
+	}
+
+	@Override
+	public void end(boolean interrupted) {
+		CommandScheduler.getInstance().cancel(aimDynamicInstance);  
+		// return control to the ops.
+		// default commands take back control immediately, now.
 	}
 
 	@Override
@@ -102,12 +123,12 @@ public class ShootOnTheMoveCommand extends Command {
 
 	public void aimHandler(Pose2d turretPose, Translation2d target, ChassisSpeeds chassisVel) {
 		if (inLeftNeutralZone() || inRightNeutralZone()) {
-			kinematicLaunchingParametersAim(turretPose, target, chassisVel, ShootingOnTheMoveConstants.flywheelNeutralZoneRPM);
+			kinematicLaunchingParametersAim(turretPose, target, 0.1, chassisVel, ShootingOnTheMoveConstants.flywheelNeutralZoneRPM);
 			return;
 		}
 
 		// Kinematic approach
-		kinematicLaunchingParametersAim(turretPose, target, chassisVel, ShootingOnTheMoveConstants.flywheelRPM);
+		kinematicLaunchingParametersAim(turretPose, target, FieldConstants.Hub.height, chassisVel, ShootingOnTheMoveConstants.flywheelRPM);
 	}
 
 	private Pose2d estimatePoseWithPhaseDelay() {
@@ -140,10 +161,9 @@ public class ShootOnTheMoveCommand extends Command {
 
 	// Pure solver: given horizontal distance and launch speed, returns hood angle in radians.
 	// Returns NaN if target is unreachable (imaginary discriminant).
-	private double solveHoodAngle(double adjustedDist, double v0) {
+	private double solveHoodAngle(double adjustedDist, double v0, double verticalDist) {
 		double g = ShootingOnTheMoveConstants.gAcceleration;
 		double v2 = v0 * v0;
-		double verticalDist = FieldConstants.Hub.height;
 		double discr = v2*v2 - g * (g*adjustedDist*adjustedDist + 2*verticalDist*v2);
 
 		if (discr < 0) return Double.NaN;  // Imaginary solutions; cannot reach target
@@ -155,7 +175,7 @@ public class ShootOnTheMoveCommand extends Command {
 	// MY IDEA: Kinematics?
 	// After watching some FRC footage, I noticed our shooting was kind of weak
 	// I watched some clips from a 2026 FRC Istanbul regional final, and noticed their arc was forgivably parabolic.
-	private void kinematicLaunchingParametersAim(Pose2d turretPose, Translation2d target, ChassisSpeeds chassisVel, double desiredRPM) {
+	private void kinematicLaunchingParametersAim(Pose2d turretPose, Translation2d target, double h, ChassisSpeeds chassisVel, double desiredRPM) {
 		double v0 = desiredRPM * (Math.PI / 30.0) * ShootingOnTheMoveConstants.flywheelRadiusMeters;  // m/s, maybe this needs an efficiency factor
 		
 		double dx = target.getX() - turretPose.getTranslation().getX();
@@ -174,7 +194,7 @@ public class ShootOnTheMoveCommand extends Command {
 			ady = dy - chassisVel.vyMetersPerSecond * estimatedFlightTime;
 			double adjustedDist = Math.sqrt(adx*adx + ady*ady);
 
-			hoodSolution = solveHoodAngle(adjustedDist, v0);
+			hoodSolution = solveHoodAngle(adjustedDist, v0, h);
 			if (Double.isNaN(hoodSolution)) return;  // Unreachable, so hold last known good angles
 
 			// Refine flight time using actual horizontal velocity component
