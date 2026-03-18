@@ -1,11 +1,12 @@
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Degree;
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.DegreesPerSecond;
+import static edu.wpi.first.units.Units.DegreesPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Inch;
 import static edu.wpi.first.units.Units.Pound;
-import static edu.wpi.first.units.Units.RPM;
-import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
@@ -14,6 +15,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.GenericConstants;
@@ -40,7 +42,7 @@ public class HoodSubsystem extends SubsystemBase {
 		.withMotorInverted(true)
 		.withClosedLoopRampRate(Seconds.of(0.25))
 		.withOpenLoopRampRate(Seconds.of(0.25))
-		.withClosedLoopController(88, 15, 0, RPM.of(200), RotationsPerSecondPerSecond.of(200))
+		.withClosedLoopController(88, 15, 0, DegreesPerSecond.of(2000), DegreesPerSecondPerSecond.of(1500))
 		.withFeedforward(new ArmFeedforward(0, 0.3333, 0))
 		.withControlMode(ControlMode.CLOSED_LOOP);
 
@@ -97,6 +99,7 @@ public class HoodSubsystem extends SubsystemBase {
 	@Override
 	public void periodic() {
 		hood.updateTelemetry();
+		SmartDashboard.putNumber("hood angle", hood.getAngle().in(Degree));
 	}
 
 	@Override

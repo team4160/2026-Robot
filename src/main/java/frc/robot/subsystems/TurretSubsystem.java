@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Degree;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.DegreesPerSecond;
 import static edu.wpi.first.units.Units.DegreesPerSecondPerSecond;
@@ -14,11 +15,11 @@ import static edu.wpi.first.units.Units.Volts;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.GenericConstants;
@@ -62,9 +63,9 @@ public class TurretSubsystem extends SubsystemBase {
 
 		motorConfig = new SmartMotorControllerConfig(this)
 			.withSoftLimit(Degrees.of(-30), Degrees.of(222))
-			.withClosedLoopController(0.4491, 0, 0, DegreesPerSecond.of(45), DegreesPerSecondPerSecond.of(45))
+			.withClosedLoopController(69, 6.9, 0, DegreesPerSecond.of(5000), DegreesPerSecondPerSecond.of(2000))
 			// .withSimClosedLoopController(130, 0, 3.4, DegreesPerSecond.of(1000), DegreesPerSecondPerSecond.of(1500))
-			.withFeedforward(new SimpleMotorFeedforward(0.18, 4.1566, 0.11307))
+			// .withFeedforward(new SimpleMotorFeedforward(0.18, 4.0, 0.11307))
 			.withGearing(new MechanismGearing(GearBox.fromStages("5:1", "200:20")))
 			.withIdleMode(MotorMode.COAST)
 			.withTelemetry("TurretMotorV2", GenericConstants.kTelemetryVerbosity)
@@ -151,6 +152,7 @@ public class TurretSubsystem extends SubsystemBase {
 		// }
 		// turretMotor.setPosition(cancoder.getAbsolutePosition().getValue());
 		// turretMotor.setPosition(3);
+		SmartDashboard.putNumber("turret angle", turret.getAngle().in(Degree));
 		turret.updateTelemetry();
 	}
 

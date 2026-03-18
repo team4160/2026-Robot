@@ -82,7 +82,7 @@
 // 		launchFlywheelSpeedMap.put(Inches.of(77.51).in(Meters), 6100.0);
 // 		timeOfFlightMap.put(5.68, 1.16);
 // 		timeOfFlightMap.put(4.55, 1.12);
-// 		timeOfFlightMap.put(3.15, 1.11);
+// 		timeOfFl ightMap.put(3.15, 1.11);
 // 		timeOfFlightMap.put(1.88, 1.09);
 // 		timeOfFlightMap.put(1.38, 0.90);
 // 	}
