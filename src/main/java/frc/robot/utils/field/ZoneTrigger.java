@@ -87,7 +87,9 @@ public class ZoneTrigger {
 		this.setBothTables(Telemetry.Publishers.Robot.zoneTable);
 		this.reloadPublishers(zoneName); // Reloads the publishers with our new tables.
 		this.setPoseSupplier(() ->
-			SwerveSubsystem.SwerveState.CurrentPose.transformBy(ShootingOnTheMoveConstants.robotToTurret.toTransform2d())
+			SwerveSubsystem.SwerveState.CurrentPose.transformBy(
+				ShootingOnTheMoveConstants.robotToTurret.toTransform2d()
+			)
 		);
 
 		// Sets the trigger telling when our robot is within the zone.

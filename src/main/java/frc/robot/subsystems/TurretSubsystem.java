@@ -62,7 +62,7 @@ public class TurretSubsystem extends SubsystemBase {
 		cancoder.getPosition().refresh();
 
 		motorConfig = new SmartMotorControllerConfig(this)
-			.withSoftLimit(Degrees.of(-30), Degrees.of(222))
+			.withSoftLimit(Degrees.of(-30), Degrees.of(30))
 			.withClosedLoopController(69, 6.9, 0, DegreesPerSecond.of(5000), DegreesPerSecondPerSecond.of(2000))
 			// .withSimClosedLoopController(130, 0, 3.4, DegreesPerSecond.of(1000), DegreesPerSecondPerSecond.of(1500))
 			// .withFeedforward(new SimpleMotorFeedforward(0.18, 4.0, 0.11307))
@@ -93,7 +93,7 @@ public class TurretSubsystem extends SubsystemBase {
 			);
 
 		pivotConfig = new PivotConfig(motor)
-			.withHardLimit(Degrees.of(-30), Degrees.of(222))
+			.withHardLimit(Degrees.of(-30), Degrees.of(30))
 			.withTelemetry("Turret", GenericConstants.kTelemetryVerbosity)
 			// .withStartingPosition(cancoder.getPosition().getValue().times(21 / 200))
 			// .withStartingPosition(Degrees.of(0))

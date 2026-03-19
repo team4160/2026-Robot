@@ -4,8 +4,8 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.RPM;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
@@ -28,7 +28,6 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.ShootOnTheMoveCommand;
 import frc.robot.constants.IntakeConstants;
 import frc.robot.constants.OperatorConstants;
-import frc.robot.constants.ShootingOnTheMoveConstants;
 import frc.robot.subsystems.HoodSubsystem;
 import frc.robot.subsystems.IntakeArmSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
@@ -160,17 +159,15 @@ public class RobotContainer {
 	private void RegisterAutos() {
 		// these two are all we really need
 
-		NamedCommands.registerCommand("intake", 
-			intake.set(-IntakeConstants.kIntakeDutyCycle)
-			.andThen(
-				intake.set(IntakeConstants.kIntakeDutyCycle)
-			)
+		NamedCommands.registerCommand(
+			"intake",
+			intake.set(-IntakeConstants.kIntakeDutyCycle).andThen(intake.set(IntakeConstants.kIntakeDutyCycle))
 		);
-		NamedCommands.registerCommand("aimOnMove", 
-			new ShootOnTheMoveCommand(drivebase, scoringSystem).withName("OperatorControls.aimCommand")
-			.alongWith(
-				spindexer.set(-.85).alongWith(kicker.set(-0.25)).withTimeout(0.5)
-			)
+		NamedCommands.registerCommand(
+			"aimOnMove",
+			new ShootOnTheMoveCommand(drivebase, scoringSystem)
+				.withName("OperatorControls.aimCommand")
+				.alongWith(spindexer.set(-.85).alongWith(kicker.set(-0.25)).withTimeout(0.5))
 		);
 	}
 
@@ -209,6 +206,7 @@ public class RobotContainer {
 		kicker.setDefaultCommand(kicker.set(0));
 
 		turret.setDefaultCommand(turret.setAngle(Degrees.of(0)));
+		// turret.setDefaultCommand(turret.set(0));
 
 		hood.setDefaultCommand(hood.setAngle(Degrees.of(0)));
 
@@ -257,15 +255,16 @@ public class RobotContainer {
 
 		// manual revving  (suboptimal?)
 		// Attila: rather use linear velocity over angular velocity like FeetPerSecond or MetersPerSecond
-		operatorXbox.y().whileTrue(shooter.setVelocity(RPM.of(ShootingOnTheMoveConstants.flywheelRPM)));
+		operatorXbox.a().whileTrue(shooter.setVelocity(RPM.of(4000)));
+		operatorXbox.y().whileTrue(shooter.setVelocity(RPM.of(scoringSystem.getTargetShooterSpeed().magnitude())));
 
 		// send the fuel through  (triggers the fuel shooting)
-		operatorXbox.rightTrigger().whileTrue(spindexer.set(-.85).alongWith(kicker.set(-0.25)));
+		operatorXbox.rightTrigger().whileTrue(spindexer.set(.85).alongWith(kicker.set(-0.25)));
 
 		// right stick X-ax right
-		operatorXbox.axisGreaterThan(4,0.2).whileTrue(turret.set(.3));
+		operatorXbox.axisGreaterThan(4, 0.2).whileTrue(turret.set(.1));
 		// right stick X-ax left
-		operatorXbox.axisLessThan(4, -0.2).whileTrue(turret.set(-.3));
+		operatorXbox.axisLessThan(4, -0.2).whileTrue(turret.set(-.1));
 	}
 
 	/**
