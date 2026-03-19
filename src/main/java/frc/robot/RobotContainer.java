@@ -215,27 +215,30 @@ public class RobotContainer {
 			driverXbox.y().whileTrue(Commands.runOnce(drivebase::lock, drivebase).repeatedly());
 		}
 
-		// driverXbox
-		// 	.x()
-		// 	.toggleOnTrue(new ShootOnTheMoveCommand(drivebase, scoringSystem).withName("OperatorControls.aimCommand"));
+		//operatorXbox.a().toggleOnTrue(new ShootOnTheMoveCommand(drivebase, scoringSystem).withName("OperatorControls.aimCommand"));
 
 		// operatorXbox.a().whileTrue(intake.set(IntakeConstants.kIntakeDutyCycle));
+		// operatorXbox.leftTrigger().whileTrue(intake.set(-IntakeConstants.kIntakeDutyCycle));
+		operatorXbox.leftTrigger().whileTrue(intake.set(-0.75));
+		operatorXbox.rightTrigger().whileTrue(intake.set(0.75));
 
 		// operatorXbox.y().whileTrue(shooter.setVelocity(RPM.of(5900)));
 		// SmartDashboard.putNumber("ShootSpeed", 6900);
 		// operatorXbox.y().and(GameData::canShoot).whileTrue(shooter.setVelocity());
 		operatorXbox.y().whileTrue(shooter.setVelocity());
 
-		operatorXbox.b().whileTrue(spindexer.set(0.75)); //.alongWith(kicker.set(0.5)));
+		operatorXbox.x().whileTrue(intakeArm.set(1)).whileFalse(intakeArm.set(0));
 
-		// operatorXbox.leftTrigger().whileTrue(intake.set(-IntakeConstants.kIntakeDutyCycle));
+		operatorXbox.b().whileTrue(spindexer.set(0.75));
+		operatorXbox.b().whileTrue(kicker.set(-0.5));
 
-		operatorXbox.leftTrigger().whileTrue(hood.setAngle(Degrees.of(15)));
-		operatorXbox.rightTrigger().whileTrue(hood.setAngle(Degrees.of(30)));
-
-		// operatorXbox.x().whileTrue(intakeArm.set(1)).whileFalse(intakeArm.set(0));
+		operatorXbox.leftBumper().whileTrue(hood.setAngle(Degrees.of(15)));
+		operatorXbox.rightBumper().whileTrue(hood.setAngle(Degrees.of(30)));
 
 		// operatorXbox.leftBumper().whileTrue(shooter.sysId());
+
+		operatorXbox.leftStick().whileTrue(turret.set(0.05));
+		operatorXbox.rightStick().whileTrue(turret.set(-0.05));
 	}
 
 	/**
