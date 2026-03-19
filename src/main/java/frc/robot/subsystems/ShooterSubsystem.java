@@ -142,10 +142,8 @@ public class ShooterSubsystem extends SubsystemBase {
 	}
 
 	/** Creates a new ExampleSubsystem. */
-	public ShooterSubsystem() {
-		// shooterFollower.getConfigurator().apply((TalonFXConfiguration) shooterLeaderMotor.getMotorControllerConfig());
-		// shooterFollower.getConfigurator().apply(shooterLeader.getConfigurator().)
-	}
+	public ShooterSubsystem() 
+	{}
 
 	@Override
 	public void periodic() {
