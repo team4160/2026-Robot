@@ -142,8 +142,7 @@ public class ShooterSubsystem extends SubsystemBase {
 	}
 
 	/** Creates a new ExampleSubsystem. */
-	public ShooterSubsystem() 
-	{}
+	public ShooterSubsystem() {}
 
 	@Override
 	public void periodic() {
