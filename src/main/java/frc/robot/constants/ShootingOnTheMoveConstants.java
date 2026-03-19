@@ -15,7 +15,7 @@ public class ShootingOnTheMoveConstants {
 		new Rotation3d(0, 0, 180)
 	);
 
-	public static final double RPMOverapproxFactor = 3.0;
+	public static final double RPMOverapproxFactor = 2.0;
 	public static final double phaseDelay = 0.03;
 	public static final double flywheelRPM = 4500.0;
 	public static final double flywheelNeutralZoneRPM = 4500.0;
