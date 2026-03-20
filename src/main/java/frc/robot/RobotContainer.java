@@ -19,12 +19,14 @@ import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.commands.ShootOnTheMoveCommand;
 import frc.robot.constants.OperatorConstants;
 import frc.robot.subsystems.HoodSubsystem;
 import frc.robot.subsystems.IntakeArmSubsystem;
@@ -35,6 +37,9 @@ import frc.robot.subsystems.SpindexerSubsystem;
 import frc.robot.subsystems.SwerveSubsystem;
 import frc.robot.subsystems.TurretSubsystem;
 import frc.robot.utils.EqualsUtil;
+import frc.robot.utils.field.AllianceFlipUtil;
+import frc.robot.utils.field.FieldConstants;
+
 import java.io.File;
 import swervelib.SwerveInputStream;
 
@@ -58,9 +63,10 @@ public class RobotContainer {
 	// Establish a Sendable Chooser that will be able to be sent to the SmartDashboard, allowing selection of desired auto
 	private final SendableChooser<Command> autoChooser;
 
-	private final ShooterSubsystem shooter = new ShooterSubsystem();
-	private final TurretSubsystem turret = new TurretSubsystem();
-	private final HoodSubsystem hood = new HoodSubsystem();
+	// these three NEED to be public for aimbot to work
+	public final ShooterSubsystem shooter = new ShooterSubsystem();
+	public final TurretSubsystem turret = new TurretSubsystem();
+	public final HoodSubsystem hood = new HoodSubsystem();
 	private final IntakeSubsystem intake = new IntakeSubsystem();
 	private final IntakeArmSubsystem intakeArm = new IntakeArmSubsystem();
 	private final KickerSubsystem kicker = new KickerSubsystem();
@@ -217,7 +223,7 @@ public class RobotContainer {
 			driverXbox.y().whileTrue(Commands.runOnce(drivebase::lock, drivebase).repeatedly());
 		}
 
-		//operatorXbox.a().toggleOnTrue(new ShootOnTheMoveCommand(drivebase, scoringSystem).withName("OperatorControls.aimCommand"));
+		operatorXbox.b().toggleOnTrue(new ShootOnTheMoveCommand(drivebase, this).withName("OperatorControls.aimCommand"));
 
 		// operatorXbox.a().whileTrue(intake.set(IntakeConstants.kIntakeDutyCycle));
 		// operatorXbox.leftTrigger().whileTrue(intake.set(-IntakeConstants.kIntakeDutyCycle));
@@ -231,6 +237,7 @@ public class RobotContainer {
 
 		// operatorXbox.x().whileTrue(intakeArm.set(1)).whileFalse(intakeArm.set(0));
 
+		// feed fuel to shooter
 		operatorXbox.rightTrigger().whileTrue(spindexer.set(0.75));
 		operatorXbox.rightTrigger().whileTrue(kicker.set(-0.5));
 
@@ -255,5 +262,26 @@ public class RobotContainer {
 
 	public void setMotorBrake(boolean brake) {
 		drivebase.setMotorBrake(brake);
+	}
+
+	public boolean inNeutralZone() {
+		double x = AllianceFlipUtil.apply(drivebase.getPose()).getX();
+		return x > FieldConstants.LinesVertical.neutralZoneNear
+			&& x < FieldConstants.LinesVertical.neutralZoneFar;
+	}
+	public boolean inLeftNeutralZone() {
+		Pose2d flippedPose = AllianceFlipUtil.apply(drivebase.getPose());
+		return inNeutralZone()
+			&& flippedPose.getY() > FieldConstants.LinesHorizontal.center;
+	}
+	public boolean inRightNeutralZone() {
+		Pose2d flippedPose = AllianceFlipUtil.apply(drivebase.getPose());
+		return inNeutralZone()
+			&& flippedPose.getY() < FieldConstants.LinesHorizontal.center;
+	}
+	public boolean inScoringZone() {
+		double x = AllianceFlipUtil.apply(drivebase.getPose()).getX();
+		return x >= FieldConstants.LinesVertical.allianceZone
+			&& x < FieldConstants.LinesVertical.neutralZoneNear;
 	}
 }
