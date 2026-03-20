@@ -5,6 +5,7 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.RPM;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
@@ -168,7 +169,7 @@ public class RobotContainer {
 
 		intake.setDefaultCommand(intake.set(0));
 
-		intakeArm.setDefaultCommand(intakeArm.setAngle(Degrees.of(30)));
+		intakeArm.setDefaultCommand(intakeArm.setAngle(Degrees.of(-1)));
 
 		shooter.setDefaultCommand(shooter.set(0));
 
@@ -176,7 +177,8 @@ public class RobotContainer {
 
 		kicker.setDefaultCommand(kicker.set(0));
 
-		turret.setDefaultCommand(turret.setAngle(Degrees.of(0)));
+		// turret.setDefaultCommand(turret.setAngle(Degrees.of(0)));
+		turret.setDefaultCommand(turret.set(0));
 
 		hood.setDefaultCommand(hood.setAngle(Degrees.of(0)));
 
@@ -219,26 +221,26 @@ public class RobotContainer {
 
 		// operatorXbox.a().whileTrue(intake.set(IntakeConstants.kIntakeDutyCycle));
 		// operatorXbox.leftTrigger().whileTrue(intake.set(-IntakeConstants.kIntakeDutyCycle));
-		operatorXbox.leftTrigger().whileTrue(intake.set(-0.75));
-		operatorXbox.rightTrigger().whileTrue(intake.set(0.75));
-
+		operatorXbox.leftTrigger().whileTrue(intakeArm.setAngle(Degrees.of(92)));
+		operatorXbox.a().whileTrue(intake.set(-0.75));
+		operatorXbox.x().whileTrue(intake.set(0.75));
 		// operatorXbox.y().whileTrue(shooter.setVelocity(RPM.of(5900)));
 		// SmartDashboard.putNumber("ShootSpeed", 6900);
 		// operatorXbox.y().and(GameData::canShoot).whileTrue(shooter.setVelocity());
-		operatorXbox.y().whileTrue(shooter.setVelocity());
+		operatorXbox.y().whileTrue(shooter.setVelocity(RPM.of(5000)));
 
-		operatorXbox.x().whileTrue(intakeArm.set(1)).whileFalse(intakeArm.set(0));
+		// operatorXbox.x().whileTrue(intakeArm.set(1)).whileFalse(intakeArm.set(0));
 
-		operatorXbox.b().whileTrue(spindexer.set(0.75));
-		operatorXbox.b().whileTrue(kicker.set(-0.5));
+		operatorXbox.rightTrigger().whileTrue(spindexer.set(0.75));
+		operatorXbox.rightTrigger().whileTrue(kicker.set(-0.5));
 
-		operatorXbox.leftBumper().whileTrue(hood.setAngle(Degrees.of(15)));
-		operatorXbox.rightBumper().whileTrue(hood.setAngle(Degrees.of(30)));
+		operatorXbox.leftBumper().toggleOnTrue(hood.setAngle(Degrees.of(15)));
+		operatorXbox.rightBumper().toggleOnTrue(hood.setAngle(Degrees.of(30)));
 
 		// operatorXbox.leftBumper().whileTrue(shooter.sysId());
 
-		operatorXbox.leftStick().whileTrue(turret.set(0.05));
-		operatorXbox.rightStick().whileTrue(turret.set(-0.05));
+		operatorXbox.pov(270).whileTrue(turret.set(0.15));
+		operatorXbox.pov(90).whileTrue(turret.set(-0.15));
 	}
 
 	/**

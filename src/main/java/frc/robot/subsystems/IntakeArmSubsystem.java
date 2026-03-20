@@ -3,6 +3,8 @@ package frc.robot.subsystems;
 import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Degree;
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.DegreesPerSecond;
+import static edu.wpi.first.units.Units.DegreesPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Feet;
 import static edu.wpi.first.units.Units.Pounds;
 import static edu.wpi.first.units.Units.Second;
@@ -40,7 +42,7 @@ public class IntakeArmSubsystem extends SubsystemBase {
 	private SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
 		.withControlMode(ControlMode.CLOSED_LOOP)
 		// Feedback Constants (PID Constants)
-		.withClosedLoopController(25, 1, 1) // , DegreesPerSecond.of(30), DegreesPerSecondPerSecond.of(45))
+		.withClosedLoopController(25, 1, 1, DegreesPerSecond.of(30), DegreesPerSecondPerSecond.of(45))
 		// .withSimClosedLoopController(35, 0, 0) // , DegreesPerSecond.of(90), DegreesPerSecondPerSecond.of(45))
 		// Feedforward Constants
 		.withFeedforward(new ArmFeedforward(0.1, 0.45, 25))
@@ -57,7 +59,8 @@ public class IntakeArmSubsystem extends SubsystemBase {
 		// Motor properties to prevent over currenting.
 		.withMotorInverted(false)
 		.withIdleMode(MotorMode.BRAKE)
-		.withStatorCurrentLimit(Amps.of(40))
+		.withStatorCurrentLimit(Amps.of(60))
+		.withSupplyCurrentLimit(Amps.of(40))
 		// .withClosedLoopRampRate(Seconds.of(0.25))
 		// .withOpenLoopRampRate(Seconds.of(0.25))
 		.withFollowers(Pair.of(armFollower, true));
@@ -70,9 +73,9 @@ public class IntakeArmSubsystem extends SubsystemBase {
 
 	private ArmConfig armCfg = new ArmConfig(SmartMotorController)
 		// Soft limit is applied to the SmartMotorControllers PID
-		.withSoftLimits(Degrees.of(0), Degrees.of(92))
+		.withSoftLimits(Degrees.of(-1.5), Degrees.of(92))
 		// Hard limit is applied to the simulation.
-		.withHardLimit(Degrees.of(0), Degrees.of(94))
+		.withHardLimit(Degrees.of(-2), Degrees.of(94))
 		// Starting position is where your arm starts
 		// .withStartingPosition(Degrees.of(0))
 		// Length and mass of your arm for sim.

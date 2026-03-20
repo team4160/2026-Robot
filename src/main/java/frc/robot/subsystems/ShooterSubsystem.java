@@ -103,7 +103,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
 	public Command setVelocity() {
 		shooterLeaderMotor.startClosedLoopController();
-		AngularVelocity speed = RPM.of(SmartDashboard.getNumber("ShootSpeed", 5600));
+		AngularVelocity speed = RPM.of(SmartDashboard.getNumber("ShootSpeed", 5300));
 		return shooter.setSpeed(speed);
 	}
 
