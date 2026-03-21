@@ -180,7 +180,7 @@ public class RobotContainer {
 		// turret.setDefaultCommand(turret.setAngle(Degrees.of(0)));
 		turret.setDefaultCommand(turret.set(0));
 
-		hood.setDefaultCommand(hood.setDutyCycle(0));
+		hood.setDefaultCommand(hood.setIncrementAngle(0));
 
 		if (Robot.isSimulation()) {
 			Pose2d target = new Pose2d(new Translation2d(1, 4), Rotation2d.fromDegrees(90));
@@ -229,17 +229,23 @@ public class RobotContainer {
 		// operatorXbox.y().whileTrue(shooter.setVelocity(RPM.of(5900)));
 		// SmartDashboard.putNumber("ShootSpeed", 6900);
 		// operatorXbox.y().and(GameData::canShoot).whileTrue(shooter.setVelocity());
-		operatorXbox.y().whileTrue(shooter.setVelocity(RPM.of(5000)));
+		operatorXbox.y().whileTrue(shooter.setVelocity(RPM.of(shooter.rpmValue)));
 
 		// operatorXbox.x().whileTrue(intakeArm.set(1)).whileFalse(intakeArm.set(0));
 
 		operatorXbox.rightTrigger().whileTrue(spindexer.set(0.75)).onFalse(kicker.set(0.25).withTimeout(1));
 		operatorXbox.rightTrigger().whileTrue(kicker.set(-1));
 
-		operatorXbox.leftBumper().toggleOnTrue(hood.setAngle(Degrees.of(15)));
-		operatorXbox.rightBumper().toggleOnTrue(hood.setAngle(Degrees.of(30)));
+		// operatorXbox.leftBumper().toggleOnTrue(hood.setAngle(Degrees.of(15)));
+		// operatorXbox.rightBumper().toggleOnTrue(hood.setAngle(Degrees.of(30)));
 
 		// operatorXbox.leftBumper().whileTrue(shooter.sysId());
+
+        operatorXbox.leftBumper().toggleOnTrue(shooter.setIncrementVelocity(RPM.of(-100)));
+		operatorXbox.rightBumper().toggleOnTrue(shooter.setIncrementVelocity(RPM.of(100)));
+
+        operatorXbox.pov(0).onTrue(hood.setIncrementAngle(Degrees.of(2)));
+        operatorXbox.pov(180).onTrue(hood.setIncrementAngle(Degrees.of(-2)));
 
 		operatorXbox.pov(270).whileTrue(turret.set(0.15));
 		operatorXbox.pov(90).whileTrue(turret.set(-0.15));
