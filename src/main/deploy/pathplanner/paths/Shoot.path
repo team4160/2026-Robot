@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 7.166891891891892,
-        "y": 2.002421171171171
+        "x": 7.381385135135136,
+        "y": 2.1862725225225232
       },
       "prevControl": null,
       "nextControl": {
-        "x": 8.166891891891892,
-        "y": 2.0024211711711715
+        "x": 8.381385135135137,
+        "y": 2.1862725225225237
       },
       "isLocked": false,
       "linkedName": "2T-Pos2"
     },
     {
       "anchor": {
-        "x": 3.1323761261261267,
-        "y": 2.002421171171171
+        "x": 1.2836486486486494,
+        "y": 2.676542792792793
       },
       "prevControl": {
-        "x": 2.1323761261261267,
-        "y": 2.002421171171171
+        "x": 0.28364864864864936,
+        "y": 2.676542792792793
       },
       "nextControl": null,
       "isLocked": false,
@@ -32,6 +32,10 @@
     {
       "waypointRelativePos": 0.38880248833592435,
       "rotationDegrees": 0.0
+    },
+    {
+      "waypointRelativePos": 1,
+      "rotationDegrees": -8.530765609948057
     }
   ],
   "constraintZones": [],
@@ -47,13 +51,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 11.003540851749488
   },
   "reversed": false,
   "folder": "2-Take",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -92.3215305898328
+    "rotation": -92.32153058983282
   },
   "useDefaultConstraints": true
 }

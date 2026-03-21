@@ -127,6 +127,7 @@ public class RobotContainer {
 	public RobotContainer() {
 		// Configure the trigger bindings
 		configureBindings();
+		RegisterAutos();
 		DriverStation.silenceJoystickConnectionWarning(true);
 		DataLogManager.start();
 
@@ -141,6 +142,40 @@ public class RobotContainer {
 
 		// Put the autoChooser on the SmartDashboard
 		SmartDashboard.putData("Auto Chooser", autoChooser);
+	}
+
+	private void RegisterAutos() {
+		// these two are all we really need
+
+		// NamedCommands.registerCommand(
+		// 	"intake",
+		// 	intake.set(-IntakeConstants.kIntakeDutyCycle)
+		// 	// .andThen(
+		// 	// 	intake.set(IntakeConstants.kIntakeDutyCycle)
+		// 	// )
+		// );
+		NamedCommands.registerCommand(
+			"runIntake",
+			intakeArm.setAngle(Degrees.of(0)).andThen(intake.set(-0.75)).repeatedly()
+			// What's up with the -?
+		);
+		NamedCommands.registerCommand("stopIntake", intake.set(0));
+		NamedCommands.registerCommand(
+			"raiseIntake",
+			intakeArm.setAngle(Degrees.of(30))
+			// ASK MATIAS FOR BEST ANGLE WHEN HE GETS BACK.
+		);
+
+		NamedCommands.registerCommand(
+			"shoot",
+			shooter.setVelocity(RPM.of(4000)).alongWith(spindexer.set(0.75).alongWith(kicker.set(-1)))
+		);
+		// NamedCommands.registerCommand("aimOnMove",
+		// 	new ShootOnTheMoveCommand(drivebase, scoringSystem).withName("OperatorControls.aimCommand")
+		// 	.alongWith(
+		// 		spindexer.set(-.85).alongWith(kicker.set(-0.25)).withTimeout(0.5)
+		// 	)
+		// );
 	}
 
 	/**
@@ -224,19 +259,19 @@ public class RobotContainer {
 			.leftTrigger()
 			.whileTrue(intakeArm.setAngle(Degrees.of(92)))
 			.onFalse(intakeArm.setAngle(Degrees.of(0)).withTimeout(3));
-		operatorXbox.a().whileTrue(intake.set(-0.75));
-		operatorXbox.x().whileTrue(intake.set(0.75));
+		driverXbox.leftTrigger().whileTrue(intake.set(-0.75));
+		driverXbox.rightTrigger().whileTrue(intake.set(0.75));
 		// operatorXbox.y().whileTrue(shooter.setVelocity(RPM.of(5900)));
 		// SmartDashboard.putNumber("ShootSpeed", 6900);
 		// operatorXbox.y().and(GameData::canShoot).whileTrue(shooter.setVelocity());
-		operatorXbox.y().whileTrue(shooter.setVelocity(RPM.of(5000)));
+		operatorXbox.y().whileTrue(shooter.setVelocity(RPM.of(4000)));
 
 		// operatorXbox.x().whileTrue(intakeArm.set(1)).whileFalse(intakeArm.set(0));
 
-		operatorXbox.rightTrigger().whileTrue(spindexer.set(0.75)).onFalse(kicker.set(0.25).withTimeout(1));
+		operatorXbox.rightTrigger().whileTrue(spindexer.set(0.65)).onFalse(kicker.set(0.25).withTimeout(1));
 		operatorXbox.rightTrigger().whileTrue(kicker.set(-1));
 
-		operatorXbox.leftBumper().toggleOnTrue(hood.setAngle(Degrees.of(15)));
+		operatorXbox.leftBumper().toggleOnTrue(hood.setAngle(Degrees.of(23)));
 		operatorXbox.rightBumper().toggleOnTrue(hood.setAngle(Degrees.of(30)));
 
 		// operatorXbox.leftBumper().whileTrue(shooter.sysId());

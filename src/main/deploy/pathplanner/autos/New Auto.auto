@@ -9,15 +9,15 @@
           "data": {
             "commands": [
               {
-                "type": "path",
+                "type": "named",
                 "data": {
-                  "pathName": "1st Approach"
+                  "name": "runIntake"
                 }
               },
               {
-                "type": "named",
+                "type": "path",
                 "data": {
-                  "name": "raiseIntake"
+                  "pathName": "1st Approach"
                 }
               }
             ]
@@ -27,38 +27,31 @@
           "type": "parallel",
           "data": {
             "commands": [
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "Sweep"
-                }
-              },
               {
                 "type": "named",
                 "data": {
                   "name": "runIntake"
                 }
+              },
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Sweep"
+                }
               }
             ]
           }
         },
         {
-          "type": "parallel",
+          "type": "path",
           "data": {
-            "commands": [
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "Shoot"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "raiseIntake"
-                }
-              }
-            ]
+            "pathName": "Shoot"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "shoot"
           }
         }
       ]
