@@ -42,10 +42,10 @@ public class IntakeArmSubsystem extends SubsystemBase {
 	private SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
 		.withControlMode(ControlMode.CLOSED_LOOP)
 		// Feedback Constants (PID Constants)
-		.withClosedLoopController(25, 1, 1, DegreesPerSecond.of(30), DegreesPerSecondPerSecond.of(45))
+		.withClosedLoopController(25, 2, 1, DegreesPerSecond.of(123), DegreesPerSecondPerSecond.of(123))
 		// .withSimClosedLoopController(35, 0, 0) // , DegreesPerSecond.of(90), DegreesPerSecondPerSecond.of(45))
 		// Feedforward Constants
-		.withFeedforward(new ArmFeedforward(0.1, 0.45, 25))
+		.withFeedforward(new ArmFeedforward(0.1, 0.48, 20))
 		// .withSimFeedforward(new ArmFeedforward(0, 0, 0))
 		// Telemetry name and verbosity level
 		.withTelemetry("Arm Motor", GenericConstants.kTelemetryVerbosity)

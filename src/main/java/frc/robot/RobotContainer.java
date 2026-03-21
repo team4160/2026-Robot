@@ -83,8 +83,8 @@ public class RobotContainer {
 	 */
 	SwerveInputStream driveAngularVelocity = SwerveInputStream.of(
 		drivebase.getSwerveDrive(),
-		() -> EqualsUtil.sensitivity(driverXbox.getLeftY(), 0.75),
-		() -> EqualsUtil.sensitivity(driverXbox.getLeftX(), 0.75)
+		() -> EqualsUtil.sensitivity(-driverXbox.getLeftY(), 0.75),
+		() -> EqualsUtil.sensitivity(-driverXbox.getLeftX(), 0.75)
 	)
 		.withControllerRotationAxis(() -> EqualsUtil.sensitivity(-driverXbox.getRightX(), 0.75))
 		.deadband(OperatorConstants.DEADBAND)
@@ -169,7 +169,7 @@ public class RobotContainer {
 
 		intake.setDefaultCommand(intake.set(0));
 
-		intakeArm.setDefaultCommand(intakeArm.setAngle(Degrees.of(-1)));
+		intakeArm.setDefaultCommand(intakeArm.set(0));
 
 		shooter.setDefaultCommand(shooter.set(0));
 
@@ -180,7 +180,7 @@ public class RobotContainer {
 		// turret.setDefaultCommand(turret.setAngle(Degrees.of(0)));
 		turret.setDefaultCommand(turret.set(0));
 
-		hood.setDefaultCommand(hood.setAngle(Degrees.of(0)));
+		hood.setDefaultCommand(hood.setDutyCycle(0));
 
 		if (Robot.isSimulation()) {
 			Pose2d target = new Pose2d(new Translation2d(1, 4), Rotation2d.fromDegrees(90));
@@ -207,8 +207,7 @@ public class RobotContainer {
 						() -> driveDirectAngleKeyboard.driveToPoseEnabled(false)
 					)
 				);
-		}
-		if (DriverStation.isTest()) {
+		} else if (DriverStation.isTest()) {
 			drivebase.setDefaultCommand(driveFieldOrientedAnglularVelocity); // Overrides drive command above!
 
 			driverXbox.rightBumper().onTrue(Commands.none());
@@ -221,7 +220,10 @@ public class RobotContainer {
 
 		// operatorXbox.a().whileTrue(intake.set(IntakeConstants.kIntakeDutyCycle));
 		// operatorXbox.leftTrigger().whileTrue(intake.set(-IntakeConstants.kIntakeDutyCycle));
-		operatorXbox.leftTrigger().whileTrue(intakeArm.setAngle(Degrees.of(92)));
+		operatorXbox
+			.leftTrigger()
+			.whileTrue(intakeArm.setAngle(Degrees.of(92)))
+			.onFalse(intakeArm.setAngle(Degrees.of(0)).withTimeout(3));
 		operatorXbox.a().whileTrue(intake.set(-0.75));
 		operatorXbox.x().whileTrue(intake.set(0.75));
 		// operatorXbox.y().whileTrue(shooter.setVelocity(RPM.of(5900)));
@@ -231,8 +233,8 @@ public class RobotContainer {
 
 		// operatorXbox.x().whileTrue(intakeArm.set(1)).whileFalse(intakeArm.set(0));
 
-		operatorXbox.rightTrigger().whileTrue(spindexer.set(0.75));
-		operatorXbox.rightTrigger().whileTrue(kicker.set(-0.5));
+		operatorXbox.rightTrigger().whileTrue(spindexer.set(0.75)).onFalse(kicker.set(0.25).withTimeout(1));
+		operatorXbox.rightTrigger().whileTrue(kicker.set(-1));
 
 		operatorXbox.leftBumper().toggleOnTrue(hood.setAngle(Degrees.of(15)));
 		operatorXbox.rightBumper().toggleOnTrue(hood.setAngle(Degrees.of(30)));

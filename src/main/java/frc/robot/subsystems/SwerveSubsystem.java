@@ -65,7 +65,7 @@ public class SwerveSubsystem extends SubsystemBase {
 	/**
 	 * Enable vision odometry updates while driving.
 	 */
-	private final boolean visionDriveTest = false;
+	private final boolean visionOdometer = false;
 
 	/**
 	 * PhotonVision class to keep an accurate odometry.
@@ -109,7 +109,7 @@ public class SwerveSubsystem extends SubsystemBase {
 		swerveDrive.setAngularVelocityCompensation(true, true, 0.1); //Correct for skew that gets worse as angular velocity increases. Start with a coefficient of 0.1.
 		swerveDrive.setModuleEncoderAutoSynchronize(false, 1); // Enable if you want to resynchronize your absolute encoders and motor encoders periodically when they are not moving.
 		// swerveDrive.pushOffsetsToEncoders(); // Set the absolute encoder to be used over the internal encoder and push the offsets onto it. Throws warning if not possible
-		if (visionDriveTest) {
+		if (visionOdometer) {
 			setupPhotonVision();
 			// Stop the odometry thread if we are using vision that way we can synchronize updates better.
 			swerveDrive.stopOdometryThread();
@@ -143,9 +143,10 @@ public class SwerveSubsystem extends SubsystemBase {
 	@Override
 	public void periodic() {
 		// When vision is enabled we must manually update odometry in SwerveDrive
-		if (visionDriveTest) {
+		if (visionOdometer) {
 			swerveDrive.updateOdometry();
 			vision.updatePoseEstimation(swerveDrive);
+			System.out.println("Distance to tag 15 " + vision.getDistanceFromAprilTag(15));
 		}
 		SwerveState.CurrentPose = swerveDrive.getPose();
 		SwerveState.CurrentSpeeds = swerveDrive.getRobotVelocity();
@@ -596,7 +597,7 @@ public class SwerveSubsystem extends SubsystemBase {
 	 * If red alliance rotate the robot 180 after the drviebase zero command
 	 */
 	public void zeroGyroWithAlliance() {
-		if (isRedAlliance()) {
+		if (!isRedAlliance()) {
 			zeroGyro();
 			//Set the pose 180 degrees
 			resetOdometry(new Pose2d(getPose().getTranslation(), Rotation2d.fromDegrees(180)));

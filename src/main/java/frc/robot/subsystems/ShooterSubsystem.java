@@ -42,10 +42,10 @@ public class ShooterSubsystem extends SubsystemBase {
 	private SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
 		.withControlMode(ControlMode.CLOSED_LOOP)
 		// Feedback Constants (PID Constants)
-		.withClosedLoopController(0.69, 0.25, 0)
+		.withClosedLoopController(1.22, 1, 0)
 		// .withSimClosedLoopController(.015, 0, 0.175)
 		// Feedforward Constants
-		.withFeedforward(new SimpleMotorFeedforward(0.0, 0.0111, 0))
+		.withFeedforward(new SimpleMotorFeedforward(0.02, 0.11, 0.1))
 		// .withSimFeedforward(new SimpleMotorFeedforward(0.025, 0.011858, 0))
 		// Telemetry name and verbosity level
 		.withTelemetry("ShooterMotor", GenericConstants.kTelemetryVerbosity)
