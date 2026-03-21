@@ -80,7 +80,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
 	// Shooter Mechanism
 	private FlyWheel shooter = new FlyWheel(shooterConfig);
-	public AngularVelocity rpmValue;
+	private AngularVelocity rpmValue;
 
 	/**
 	 * Gets the current velocity of the shooter.
@@ -90,6 +90,10 @@ public class ShooterSubsystem extends SubsystemBase {
 	public AngularVelocity getVelocity() {
 		return shooter.getSpeed();
 	}
+
+    public AngularVelocity getRpmValue() {
+        return rpmValue;
+    }
 
 	/**
 	 * Set the shooter velocity.
