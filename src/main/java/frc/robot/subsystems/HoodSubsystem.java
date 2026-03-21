@@ -61,20 +61,20 @@ public class HoodSubsystem extends SubsystemBase {
 		.withHardLimit(Degrees.of(0), Degrees.of(37)); // The Hood can be modeled as an arm since it has a gravitational force acted upon based on the angle its in
 
 	private final Arm hood = new Arm(hoodConfig);
-    private double saveAngle;
+	private Angle saveAngle;
 
 	public HoodSubsystem() {
-        saveAngle = 0;
-    }
+		saveAngle = Degrees.of(0);
+	}
 
 	public Command setAngle(Angle angle) {
 		return hood.setAngle(angle);
 	}
 
-    public Command setIncrementAngle(Angle increment) {
-        saveAngle += increment;
-        return hood.setAngle(saveAngle);
-    }
+	public Command setIncrementAngle(Angle increment) {
+		saveAngle = saveAngle.plus(increment);
+		return hood.setAngle(saveAngle);
+	}
 
 	public void setAngleDirect(Angle angle) {
 		hoodSMC.setPosition(angle);
