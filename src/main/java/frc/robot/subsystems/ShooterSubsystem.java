@@ -80,6 +80,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
 	// Shooter Mechanism
 	private FlyWheel shooter = new FlyWheel(shooterConfig);
+    private AngularVelocity rpmValue;
 
 	/**
 	 * Gets the current velocity of the shooter.
@@ -100,6 +101,10 @@ public class ShooterSubsystem extends SubsystemBase {
 		shooterLeaderMotor.startClosedLoopController();
 		return shooter.setSpeed(speed);
 	}
+
+    public Command setIncrementVelocity(AngularVelocity increment) {
+        rpmValue += increment;
+    }
 
 	public Command setVelocity() {
 		shooterLeaderMotor.startClosedLoopController();
@@ -142,7 +147,9 @@ public class ShooterSubsystem extends SubsystemBase {
 	}
 
 	/** Creates a new ExampleSubsystem. */
-	public ShooterSubsystem() {}
+	public ShooterSubsystem() {
+        rpmValue = RPM.of(4000);
+    }
 
 	@Override
 	public void periodic() {
