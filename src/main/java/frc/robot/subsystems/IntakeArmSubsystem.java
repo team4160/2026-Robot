@@ -59,8 +59,8 @@ public class IntakeArmSubsystem extends SubsystemBase {
 		// Motor properties to prevent over currenting.
 		.withMotorInverted(false)
 		.withIdleMode(MotorMode.BRAKE)
-		.withStatorCurrentLimit(Amps.of(60))
-		.withSupplyCurrentLimit(Amps.of(40))
+		.withStatorCurrentLimit(Amps.of(69))
+		.withSupplyCurrentLimit(Amps.of(50))
 		// .withClosedLoopRampRate(Seconds.of(0.25))
 		// .withOpenLoopRampRate(Seconds.of(0.25))
 		.withFollowers(Pair.of(armFollower, true));
