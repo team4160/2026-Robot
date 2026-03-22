@@ -168,13 +168,30 @@ public class RobotContainer {
 		);
 
 		NamedCommands.registerCommand(
-			"shoot",
-			shooter
-				.setVelocity(RPM.of(4000))
-				.alongWith(spindexer.set(0.65).alongWith(kicker.set(-1)))
-				.withTimeout(5)
-				.finallyDo(end -> shooter.set(0))
+            "shoot",
+            shooter
+                .setVelocity(RPM.of(4000))
+                .withTimeout(0.5)
+                .andThen(spindexer.set(0.65).alongWith(kicker.set(-1)))
+                .withTimeout(2)
+                .finallyDo(end -> shooter.set(0))
+        );
+		NamedCommands.registerCommand(
+			"shootHood23",
+			hood
+				.setAngle(Degrees.of(23))
+				.withTimeout(0.35)
+				.andThen(
+					shooter
+						.setVelocity(RPM.of(4000))
+						.withTimeout(0.5)
+						.andThen(spindexer.set(0.65).alongWith(kicker.set(-1)).withTimeout(2))
+				)
+				.andThen(shooter.set(0).withTimeout(0.05))
+				.andThen(spindexer.set(0).withTimeout(0.05))
+				.andThen(kicker.set(0).withTimeout(0.05))
 		);
+		
 		// NamedCommands.registerCommand("aimOnMove",
 		// 	new ShootOnTheMoveCommand(drivebase, scoringSystem).withName("OperatorControls.aimCommand")
 		// 	.alongWith(
