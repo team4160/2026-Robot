@@ -267,8 +267,8 @@ public class Vision {
 			"back",
 			new Rotation3d(0, Units.degreesToRadians(0), 180),
 			new Translation3d(Units.inchesToMeters(3), Units.inchesToMeters(-12), Units.inchesToMeters(19)),
-			VecBuilder.fill(4, 4, 8),
-			VecBuilder.fill(0.5, 0.5, 1)
+			VecBuilder.fill(4, 4, 999999999),
+			VecBuilder.fill(0.5, 0.5, 10)
 		);
 
 		/**
@@ -342,7 +342,7 @@ public class Vision {
 				PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
 				robotToCamTransform
 			);
-			poseEstimator.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
+			poseEstimator.setMultiTagFallbackStrategy(PoseStrategy.AVERAGE_BEST_TARGETS);
 
 			this.singleTagStdDevs = singleTagStdDevs;
 			this.multiTagStdDevs = multiTagStdDevsMatrix;

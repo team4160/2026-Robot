@@ -42,7 +42,7 @@ public class IntakeArmSubsystem extends SubsystemBase {
 	private SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
 		.withControlMode(ControlMode.CLOSED_LOOP)
 		// Feedback Constants (PID Constants)
-		.withClosedLoopController(25, 2, 1, DegreesPerSecond.of(123), DegreesPerSecondPerSecond.of(123))
+		.withClosedLoopController(25, 2, 1, DegreesPerSecond.of(150), DegreesPerSecondPerSecond.of(150))
 		// .withSimClosedLoopController(35, 0, 0) // , DegreesPerSecond.of(90), DegreesPerSecondPerSecond.of(45))
 		// Feedforward Constants
 		.withFeedforward(new ArmFeedforward(0.1, 0.48, 20))
@@ -124,7 +124,7 @@ public class IntakeArmSubsystem extends SubsystemBase {
 
 	public IntakeArmSubsystem() {
 		CANcoderConfiguration cancoderConfiguration = new CANcoderConfiguration();
-		cancoderConfiguration.MagnetSensor.MagnetOffset = -0.071044921875;
+		cancoderConfiguration.MagnetSensor.MagnetOffset = -0.238525390625;
 		cancoderConfiguration.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive;
 		cancoder.getConfigurator().apply(cancoderConfiguration);
 		cancoder.getPosition().refresh();

@@ -65,7 +65,7 @@ public class SwerveSubsystem extends SubsystemBase {
 	/**
 	 * Enable vision odometry updates while driving.
 	 */
-	private final boolean visionOdometer = false;
+	private final boolean visionOdometer = true;
 
 	/**
 	 * PhotonVision class to keep an accurate odometry.
@@ -146,7 +146,7 @@ public class SwerveSubsystem extends SubsystemBase {
 		if (visionOdometer) {
 			swerveDrive.updateOdometry();
 			vision.updatePoseEstimation(swerveDrive);
-			System.out.println("Distance to tag 15 " + vision.getDistanceFromAprilTag(15));
+			System.out.println("Distance to tag 14 " + vision.getDistanceFromAprilTag(14));
 		}
 		SwerveState.CurrentPose = swerveDrive.getPose();
 		SwerveState.CurrentSpeeds = swerveDrive.getRobotVelocity();
