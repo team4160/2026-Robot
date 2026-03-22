@@ -1,0 +1,54 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 8.28,
+        "y": 3.9137973273942093
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 9.360281051731793,
+        "y": 3.4291852668042466
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 2.088663697104677,
+        "y": 2.075556792873051
+      },
+      "prevControl": {
+        "x": 2.9269821826280626,
+        "y": 1.2877394209354125
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": null
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 5.331370317,
+    "maxAcceleration": 2.331370317,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": 0.0
+  },
+  "reversed": false,
+  "folder": "Jianhao",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 2.0
+  },
+  "useDefaultConstraints": true
+}
