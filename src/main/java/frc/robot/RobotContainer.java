@@ -19,14 +19,12 @@ import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotBase;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.commands.ShootOnTheMoveCommand;
 import frc.robot.constants.OperatorConstants;
 import frc.robot.subsystems.HoodSubsystem;
 import frc.robot.subsystems.IntakeArmSubsystem;
@@ -63,14 +61,15 @@ public class RobotContainer {
 	// Establish a Sendable Chooser that will be able to be sent to the SmartDashboard, allowing selection of desired auto
 	private final SendableChooser<Command> autoChooser;
 
-	// these three NEED to be public for aimbot to work
-	public final ShooterSubsystem shooter = new ShooterSubsystem();
-	public final TurretSubsystem turret = new TurretSubsystem();
-	public final HoodSubsystem hood = new HoodSubsystem();
+	private final ShooterSubsystem shooter = new ShooterSubsystem();
+	private final TurretSubsystem turret = new TurretSubsystem();
+	private final HoodSubsystem hood = new HoodSubsystem();
 	private final IntakeSubsystem intake = new IntakeSubsystem();
 	private final IntakeArmSubsystem intakeArm = new IntakeArmSubsystem();
 	private final KickerSubsystem kicker = new KickerSubsystem();
 	private final SpindexerSubsystem spindexer = new SpindexerSubsystem();
+
+	private boolean visionEnabled = true;
 
 	public ShooterSubsystem getShooter() { return shooter; }
 	public TurretSubsystem getTurret() { return turret; }
@@ -93,8 +92,8 @@ public class RobotContainer {
 	 */
 	SwerveInputStream driveAngularVelocity = SwerveInputStream.of(
 		drivebase.getSwerveDrive(),
-		() -> EqualsUtil.sensitivity(driverXbox.getLeftY(), 0.75),
-		() -> EqualsUtil.sensitivity(driverXbox.getLeftX(), 0.75)
+		() -> EqualsUtil.sensitivity(-driverXbox.getLeftY(), 0.75),
+		() -> EqualsUtil.sensitivity(-driverXbox.getLeftX(), 0.75)
 	)
 		.withControllerRotationAxis(() -> EqualsUtil.sensitivity(-driverXbox.getRightX(), 0.75))
 		.deadband(OperatorConstants.DEADBAND)
@@ -137,6 +136,7 @@ public class RobotContainer {
 	public RobotContainer() {
 		// Configure the trigger bindings
 		configureBindings();
+		RegisterAutos();
 		DriverStation.silenceJoystickConnectionWarning(true);
 		DataLogManager.start();
 
@@ -148,9 +148,32 @@ public class RobotContainer {
 
 		// Add a simple auto option to have the robot drive forward for 1 second then stop
 		autoChooser.addOption("Drive Forward", drivebase.driveForward().withTimeout(1));
+		autoChooser.addOption("testShoot", NamedCommands.getCommand("shoot"));
 
 		// Put the autoChooser on the SmartDashboard
 		SmartDashboard.putData("Auto Chooser", autoChooser);
+	}
+
+	private void RegisterAutos() {
+		NamedCommands.registerCommand(
+			"runIntake",
+			intakeArm.setAngle(Degrees.of(0)).alongWith(intake.set(-0.75).withTimeout(15))
+		);
+		NamedCommands.registerCommand("stopIntake", intake.set(0).withTimeout(1));
+		NamedCommands.registerCommand(
+			"raiseIntake",
+			intakeArm.setAngle(Degrees.of(30)).withTimeout(3)
+		);
+
+		NamedCommands.registerCommand(
+			"shoot",
+			shooter
+				.setVelocity(RPM.of(4000))
+				.withTimeout(0.5)
+				.andThen(spindexer.set(0.65).alongWith(kicker.set(-1)))
+				.withTimeout(5)
+				.finallyDo(end -> shooter.set(0))
+		);
 	}
 
 	/**
@@ -178,23 +201,15 @@ public class RobotContainer {
 		}
 
 		intake.setDefaultCommand(intake.set(0));
-
-		intakeArm.setDefaultCommand(intakeArm.setAngle(Degrees.of(-1)));
-
+		intakeArm.setDefaultCommand(intakeArm.set(0));
 		shooter.setDefaultCommand(shooter.set(0));
-
 		spindexer.setDefaultCommand(spindexer.set(0));
-
 		kicker.setDefaultCommand(kicker.set(0));
-
-		// turret.setDefaultCommand(turret.setAngle(Degrees.of(0)));
 		turret.setDefaultCommand(turret.set(0));
-
-		hood.setDefaultCommand(hood.setAngle(Degrees.of(0)));
+		hood.setDefaultCommand(hood.setDutyCycle(0));
 
 		if (Robot.isSimulation()) {
 			Pose2d target = new Pose2d(new Translation2d(1, 4), Rotation2d.fromDegrees(90));
-			// drivebase.getSwerveDrive().field.getObject("targetPose").setPose(target);
 			driveDirectAngleKeyboard.driveToPose(
 				() -> target,
 				new ProfiledPIDController(5, 0, 0, new Constraints(5, 2)),
@@ -217,38 +232,32 @@ public class RobotContainer {
 						() -> driveDirectAngleKeyboard.driveToPoseEnabled(false)
 					)
 				);
-		}
-		if (DriverStation.isTest()) {
-			drivebase.setDefaultCommand(driveFieldOrientedAnglularVelocity); // Overrides drive command above!
-
+		} else if (DriverStation.isTest()) {
+			drivebase.setDefaultCommand(driveFieldOrientedAnglularVelocity);
 			driverXbox.rightBumper().onTrue(Commands.none());
 		} else {
 			driverXbox.a().onTrue((Commands.runOnce(drivebase::zeroGyroWithAlliance)));
 			driverXbox.y().whileTrue(Commands.runOnce(drivebase::lock, drivebase).repeatedly());
 		}
 
-		operatorXbox.b().toggleOnTrue(new ShootOnTheMoveCommand(drivebase, this).withName("OperatorControls.aimCommand"));
+		// Vision kill switch — operator start button toggles vision on/off without redeploying
+		operatorXbox.start().onTrue(Commands.runOnce(
+			() -> drivebase.toggleVisionEnabled()
+		));
 
-		// operatorXbox.a().whileTrue(intake.set(IntakeConstants.kIntakeDutyCycle));
-		// operatorXbox.leftTrigger().whileTrue(intake.set(-IntakeConstants.kIntakeDutyCycle));
-		operatorXbox.leftTrigger().whileTrue(intakeArm.setAngle(Degrees.of(92)));
-		operatorXbox.a().whileTrue(intake.set(-0.75));
-		operatorXbox.x().whileTrue(intake.set(0.75));
-		// operatorXbox.y().whileTrue(shooter.setVelocity(RPM.of(5900)));
-		// SmartDashboard.putNumber("ShootSpeed", 6900);
-		// operatorXbox.y().and(GameData::canShoot).whileTrue(shooter.setVelocity());
-		operatorXbox.y().whileTrue(shooter.setVelocity(RPM.of(5000)));
+		operatorXbox
+			.leftTrigger()
+			.whileTrue(intakeArm.setAngle(Degrees.of(92)))
+			.onFalse(intakeArm.setAngle(Degrees.of(0)).withTimeout(3));
+		driverXbox.leftTrigger().whileTrue(intake.set(-0.75));
+		driverXbox.rightTrigger().whileTrue(intake.set(0.75));
+		operatorXbox.y().whileTrue(shooter.setVelocity(RPM.of(4000)));
 
-		// operatorXbox.x().whileTrue(intakeArm.set(1)).whileFalse(intakeArm.set(0));
+		operatorXbox.rightTrigger().whileTrue(spindexer.set(0.65));
+		operatorXbox.rightTrigger().whileTrue(kicker.set(-0.75)).onFalse(kicker.set(0.25).withTimeout(1));
 
-		// feed fuel to shooter
-		operatorXbox.rightTrigger().whileTrue(spindexer.set(0.75));
-		operatorXbox.rightTrigger().whileTrue(kicker.set(-0.5));
-
-		operatorXbox.leftBumper().toggleOnTrue(hood.setAngle(Degrees.of(15)));
+		operatorXbox.leftBumper().toggleOnTrue(hood.setAngle(Degrees.of(23)));
 		operatorXbox.rightBumper().toggleOnTrue(hood.setAngle(Degrees.of(30)));
-
-		// operatorXbox.leftBumper().whileTrue(shooter.sysId());
 
 		operatorXbox.pov(270).whileTrue(turret.set(0.15));
 		operatorXbox.pov(90).whileTrue(turret.set(-0.15));
@@ -260,7 +269,6 @@ public class RobotContainer {
 	 * @return the command to run in autonomous
 	 */
 	public Command getAutonomousCommand() {
-		// Pass in the selected auto from the SmartDashboard as our desired autnomous commmand
 		return autoChooser.getSelected();
 	}
 
@@ -273,16 +281,19 @@ public class RobotContainer {
 		return x > FieldConstants.LinesVertical.neutralZoneNear
 			&& x < FieldConstants.LinesVertical.neutralZoneFar;
 	}
+
 	public boolean inLeftNeutralZone() {
 		Pose2d flippedPose = AllianceFlipUtil.apply(drivebase.getPose());
 		return inNeutralZone()
 			&& flippedPose.getY() > FieldConstants.LinesHorizontal.center;
 	}
+
 	public boolean inRightNeutralZone() {
 		Pose2d flippedPose = AllianceFlipUtil.apply(drivebase.getPose());
 		return inNeutralZone()
 			&& flippedPose.getY() < FieldConstants.LinesHorizontal.center;
 	}
+
 	public boolean inScoringZone() {
 		double x = AllianceFlipUtil.apply(drivebase.getPose()).getX();
 		return x >= FieldConstants.LinesVertical.allianceZone
