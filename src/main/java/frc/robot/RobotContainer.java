@@ -72,6 +72,10 @@ public class RobotContainer {
 	private final KickerSubsystem kicker = new KickerSubsystem();
 	private final SpindexerSubsystem spindexer = new SpindexerSubsystem();
 
+	public ShooterSubsystem getShooter() { return shooter; }
+	public TurretSubsystem getTurret() { return turret; }
+	public HoodSubsystem getHood() { return hood; }
+
 	// final ScoringSystem scoringSystem = new ScoringSystem(
 	// 	shooter,
 	// 	turret,

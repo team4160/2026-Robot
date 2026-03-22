@@ -1,0 +1,75 @@
+## Tomorrow Morning — Full Rundown
+
+### Phase 1: Calibration (15 min per camera)
+1. Print the calibration target tonight: https://docs.photonvision.org/en/latest/_images/calibration-target.png — tape it to something flat and rigid
+2. Power on robot, connect laptop to robot network
+3. Open http://10.TE.AM.11:5800 (replace TE.AM with your team number)
+4. Select your camera from the dropdown
+5. Check first — if there's already a calibration with reprojection error under 1.0px, skip to Phase 2
+6. Click Calibration tab → select the resolution it's currently running at → don't change the resolution
+7. Hold target in front of camera, click Take Snapshot 24+ times — vary angle, distance, tilt, all four corners of the frame
+8. Click Calculate — if error is under 1.0px, click Save. If over 2.0px, retake snapshots with more variety
+9. Repeat for each physical camera
+
+---
+
+### Phase 2: Measure Camera Transform (10 min)
+With a tape measure, for BACK_CAM in Vision.java:
+
+- X: distance of camera lens from robot center, forward is positive. Back-mounted = negative number
+- Y: distance left/right of robot center, left is positive in WPILib
+- Z: height of camera lens off the floor
+- Tilt: is the camera angled upward at all? Estimate degrees
+
+Update these lines in Vision.java:
+
+BACK_CAM(
+    "back",
+    new Rotation3d(0, Units.degreesToRadians(-TILT), Math.PI),
+    new Translation3d(
+        Units.inchesToMeters(-X),
+        Units.inchesToMeters(Y),
+        Units.inchesToMeters(Z)
+    ),
+    ...
+)
+
+---
+
+### Phase 3: Verify Camera Name (2 min)
+In the PhotonVision UI, check the camera name in the top left dropdown.
+It must exactly match the string in your enum — currently "back". Case sensitive.
+Rename it in the UI if needed.
+
+---
+
+### Phase 4: Deploy and Verify (10 min)
+1. Deploy code
+2. Enable robot in teleop
+3. Open Shuffleboard, look for Vision/BACK_CAM/hasEstimate
+
+Decision tree:
+- hasEstimate = false → camera name mismatch, or PhotonVision isn't running, or camera isn't connected
+- hasEstimate = true but inBounds = false → transform is wrong, X/Y/Z are off
+- hasEstimate = true and inBounds = true → drive robot around slowly, watch pose on the field widget track correctly
+- Pose jumps wildly → transform tilt angle is wrong, or calibration is bad
+- Pose drifts then snaps back when seeing tags → working correctly, this is normal Kalman filter behavior
+
+---
+
+### Phase 5: Kill Switch
+If at any point vision is making the robot behave erratically:
+- Operator presses back button on their Xbox controller → vision disabled instantly
+- Falls back to pure odometry, no redeploy needed
+
+---
+
+### If Everything Goes Wrong
+Skip vision entirely. Pure odometry with a consistent starting position is your fallback.
+Make sure your driver resets gyro with A button at the start of every match from the
+same physical position, and shoot regularly.
+
+
+
+
+https://docs.photonvision.org/en/latest/docs/calibration/calibration.html

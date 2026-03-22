@@ -120,6 +120,11 @@ public class Vision {
 			Optional<EstimatedRobotPose> poseEst = getEstimatedGlobalPose(camera);
 			if (poseEst.isPresent()) {
 				var pose = poseEst.get();
+				// Sanity check: reject poses outside field boundaries
+				double x = pose.estimatedPose.getX();
+				double y = pose.estimatedPose.getY();
+				if (x < 0 || x > 17.0 || y < 0 || y > 8.5) continue; // 2026 field dims
+				
 				swerveDrive.addVisionMeasurement(
 					pose.estimatedPose.toPose2d(),
 					pose.timestampSeconds,
@@ -243,23 +248,23 @@ public class Vision {
 		/**
 		 * Left Camera
 		 */
-		// LEFT_CAM(
-		// 	"left",
-		// 	new Rotation3d(0, Math.toRadians(0), Math.toRadians(90)),
-		// 	new Translation3d(Units.inchesToMeters(13.5), Units.inchesToMeters(-8), Units.inchesToMeters(19)),
-		// 	VecBuilder.fill(4, 4, 8),
-		// 	VecBuilder.fill(0.5, 0.5, 1)
-		// ),
-		// /**
-		//  * Right Camera
-		//  */
-		// RIGHT_CAM(
-		// 	"right",
-		// 	new Rotation3d(0, Math.toRadians(0), Math.toRadians(-90)),
-		// 	new Translation3d(Units.inchesToMeters(-13.5), Units.inchesToMeters(-8), Units.inchesToMeters(19)),
-		// 	VecBuilder.fill(4, 4, 8),
-		// 	VecBuilder.fill(0.5, 0.5, 1)
-		// ),
+		LEFT_CAM(
+			"left",
+			new Rotation3d(0, Math.toRadians(0), Math.toRadians(90)),
+			new Translation3d(Units.inchesToMeters(13.5), Units.inchesToMeters(-8), Units.inchesToMeters(19)),
+			VecBuilder.fill(4, 4, 8),
+			VecBuilder.fill(0.5, 0.5, 1)
+		),
+		/**
+		 * Right Camera
+		 */
+		RIGHT_CAM(
+			"right",
+			new Rotation3d(0, Math.toRadians(0), Math.toRadians(-90)),
+			new Translation3d(Units.inchesToMeters(-13.5), Units.inchesToMeters(-8), Units.inchesToMeters(19)),
+			VecBuilder.fill(4, 4, 8),
+			VecBuilder.fill(0.5, 0.5, 1)
+		),
 		/**
 		 * Center Camera
 		 */
@@ -346,6 +351,8 @@ public class Vision {
 
 			this.singleTagStdDevs = singleTagStdDevs;
 			this.multiTagStdDevs = multiTagStdDevsMatrix;
+			// init so non-NaN.
+			this.curStdDevs = singleTagStdDevs;
 
 			if (Robot.isSimulation()) {
 				SimCameraProperties cameraProp = new SimCameraProperties();
@@ -362,6 +369,8 @@ public class Vision {
 				cameraSim = new PhotonCameraSim(camera, cameraProp);
 				cameraSim.enableDrawWireframe(true);
 			}
+
+			
 		}
 
 		/**

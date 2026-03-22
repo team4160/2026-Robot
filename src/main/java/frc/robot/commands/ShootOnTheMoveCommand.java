@@ -27,7 +27,7 @@ public class ShootOnTheMoveCommand extends Command {
 	private final SwerveSubsystem drivetrain;
 	private final RobotContainer rc;
 
-    // Tracks current desired angles, RPM so the dynamic command supplier stays live
+	// Tracks current desired angles, RPM so the dynamic command supplier stays live
 	private Rotation2d turretAngle;
 	private double hoodAngle;
 	private AngularVelocity currentRPM;
@@ -38,7 +38,7 @@ public class ShootOnTheMoveCommand extends Command {
 	public ShootOnTheMoveCommand(SwerveSubsystem drivetrain, RobotContainer rc) {
 		this.drivetrain = drivetrain;
 		this.rc = rc;
-		addRequirements(rc.shooter, rc.turret, rc.hood);
+		addRequirements(rc.getShooter(), rc.getTurret(), rc.getHood());
 	}
 
 	@Override
@@ -46,16 +46,16 @@ public class ShootOnTheMoveCommand extends Command {
 		super.initialize();
 
 		// Seed angles from current mechanism positions
-		hoodAngle = rc.hood.getAngle().in(Degrees);
-		turretAngle = Rotation2d.fromDegrees(rc.turret.getRawAngle().in(Degrees));
+		hoodAngle = rc.getHood().getAngle().in(Degrees);
+		turretAngle = Rotation2d.fromDegrees(rc.getTurret().getRawAngle().in(Degrees));
 		currentRPM = RPM.of(0);
 
 		// Schedule the dynamic command once; suppliers read live fields each loop.
 		// Note: Command.schedule() is deprecated since 2025; use CommandScheduler directly.
 		aimDynamicInstance = Commands.parallel(
-			rc.shooter.setVelocityDynamic(() -> currentRPM).asProxy(),
-			rc.turret.setAngleDynamic(() -> turretAngle.getMeasure()).asProxy(),
-			rc.hood.setAngleDynamic(() -> Degrees.of(hoodAngle)).asProxy()
+			rc.getShooter().setVelocityDynamic(() -> currentRPM).asProxy(),
+			rc.getTurret().setAngleDynamic(() -> turretAngle.getMeasure()).asProxy(),
+			rc.getHood().setAngleDynamic(() -> Degrees.of(hoodAngle)).asProxy()
 		);
 		CommandScheduler.getInstance().schedule(aimDynamicInstance);
 	}
@@ -170,7 +170,7 @@ public class ShootOnTheMoveCommand extends Command {
 	) {
 		double v0 = desiredRPM * (Math.PI / 30.0)
 			* ShootingOnTheMoveConstants.flywheelRadiusMeters
-			* ShootingOnTheMoveConstants.RPMOverapproxFactor;  // m/s,  this needed an efficiency factor
+			* ShootingOnTheMoveConstants.RPMOverapproxFactor;  // m/s, this needed an efficiency factor
 
 		double dx = target.getX() - turretPose.getTranslation().getX();
 		double dy = target.getY() - turretPose.getTranslation().getY();
