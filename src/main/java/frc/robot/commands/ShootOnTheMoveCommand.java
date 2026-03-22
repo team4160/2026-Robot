@@ -53,9 +53,18 @@ public class ShootOnTheMoveCommand extends Command {
 		// Schedule the dynamic command once; suppliers read live fields each loop.
 		// Note: Command.schedule() is deprecated since 2025; use CommandScheduler directly.
 		aimDynamicInstance = Commands.parallel(
-			rc.getShooter().setVelocityDynamic(() -> currentRPM).asProxy(),
-			rc.getTurret().setAngleDynamic(() -> turretAngle.getMeasure()).asProxy(),
-			rc.getHood().setAngleDynamic(() -> Degrees.of(hoodAngle)).asProxy()
+			rc
+				.getShooter()
+				.setVelocityDynamic(() -> currentRPM)
+				.asProxy(),
+			rc
+				.getTurret()
+				.setAngleDynamic(() -> turretAngle.getMeasure())
+				.asProxy(),
+			rc
+				.getHood()
+				.setAngleDynamic(() -> Degrees.of(hoodAngle))
+				.asProxy()
 		);
 		CommandScheduler.getInstance().schedule(aimDynamicInstance);
 	}
@@ -107,27 +116,35 @@ public class ShootOnTheMoveCommand extends Command {
 	public void aimHandler(Pose2d turretPose, Translation2d target, ChassisSpeeds chassisVel) {
 		if (inLeftNeutralZone() || inRightNeutralZone()) {
 			kinematicLaunchingParametersAim(
-				turretPose, target, 0.1,
-				chassisVel, ShootingOnTheMoveConstants.flywheelNeutralZoneRPM
+				turretPose,
+				target,
+				0.1,
+				chassisVel,
+				ShootingOnTheMoveConstants.flywheelNeutralZoneRPM
 			);
 			return;
 		}
 
 		// Kinematic approach
 		kinematicLaunchingParametersAim(
-			turretPose, target, FieldConstants.Hub.height,
-			chassisVel, ShootingOnTheMoveConstants.flywheelRPM
+			turretPose,
+			target,
+			FieldConstants.Hub.height,
+			chassisVel,
+			ShootingOnTheMoveConstants.flywheelRPM
 		);
 	}
 
 	private Pose2d estimatePoseWithPhaseDelay() {
 		Pose2d pose = drivetrain.getPose();
 		ChassisSpeeds vel = drivetrain.getRobotVelocity();
-		return pose.exp(new Twist2d(
-			vel.vxMetersPerSecond * ShootingOnTheMoveConstants.phaseDelay,
-			vel.vyMetersPerSecond * ShootingOnTheMoveConstants.phaseDelay,
-			vel.omegaRadiansPerSecond * ShootingOnTheMoveConstants.phaseDelay
-		));
+		return pose.exp(
+			new Twist2d(
+				vel.vxMetersPerSecond * ShootingOnTheMoveConstants.phaseDelay,
+				vel.vyMetersPerSecond * ShootingOnTheMoveConstants.phaseDelay,
+				vel.omegaRadiansPerSecond * ShootingOnTheMoveConstants.phaseDelay
+			)
+		);
 	}
 
 	private Translation2d getCurrentTarget() {
@@ -153,9 +170,9 @@ public class ShootOnTheMoveCommand extends Command {
 	private double solveHoodAngle(double adjustedDist, double v0, double verticalDist) {
 		double g = ShootingOnTheMoveConstants.gAcceleration;
 		double v2 = v0 * v0;
-		double discr = v2*v2 - g * (g*adjustedDist*adjustedDist + 2*verticalDist*v2);
+		double discr = v2 * v2 - g * (g * adjustedDist * adjustedDist + 2 * verticalDist * v2);
 
-		if (discr < 0) return Double.NaN;  // Imaginary solutions; cannot reach target
+		if (discr < 0) return Double.NaN; // Imaginary solutions; cannot reach target
 
 		// High arc (additive) solution
 		return Math.atan((v2 + Math.sqrt(discr)) / (g * adjustedDist));
@@ -165,31 +182,37 @@ public class ShootOnTheMoveCommand extends Command {
 	// After watching some FRC footage, I noticed our shooting was kind of weak
 	// I watched some clips from a 2026 FRC Istanbul regional final, and noticed their arc was forgivably parabolic.
 	private void kinematicLaunchingParametersAim(
-		Pose2d turretPose, Translation2d target, double h,
-		ChassisSpeeds chassisVel, double desiredRPM
+		Pose2d turretPose,
+		Translation2d target,
+		double h,
+		ChassisSpeeds chassisVel,
+		double desiredRPM
 	) {
-		double v0 = desiredRPM * (Math.PI / 30.0)
-			* ShootingOnTheMoveConstants.flywheelRadiusMeters
-			* ShootingOnTheMoveConstants.RPMOverapproxFactor;  // m/s, this needed an efficiency factor
+		double v0 =
+			desiredRPM *
+			(Math.PI / 30.0) *
+			ShootingOnTheMoveConstants.flywheelRadiusMeters *
+			ShootingOnTheMoveConstants.RPMOverapproxFactor; // m/s, this needed an efficiency factor
 
 		double dx = target.getX() - turretPose.getTranslation().getX();
 		double dy = target.getY() - turretPose.getTranslation().getY();
-		double horizontalDist = Math.sqrt(dx*dx + dy*dy);
+		double horizontalDist = Math.sqrt(dx * dx + dy * dy);
 
 		// first-pass flight time approximation
-		double estimatedFlightTime = horizontalDist / v0;  // initial rough estimate
+		double estimatedFlightTime = horizontalDist / v0; // initial rough estimate
 		double hoodSolution = Double.NaN;
-		double adx = dx, ady = dy;
+		double adx = dx,
+			ady = dy;
 
 		// iteratively estimate flight time.
 		// by default, aimIterations is set to 2. Must be >= 1.
 		for (int i = 0; i < ShootingOnTheMoveConstants.aimIterations; i++) {
 			adx = dx - chassisVel.vxMetersPerSecond * estimatedFlightTime;
 			ady = dy - chassisVel.vyMetersPerSecond * estimatedFlightTime;
-			double adjustedDist = Math.sqrt(adx*adx + ady*ady);
+			double adjustedDist = Math.sqrt(adx * adx + ady * ady);
 
 			hoodSolution = solveHoodAngle(adjustedDist, v0, h);
-			if (Double.isNaN(hoodSolution)) return;  // Unreachable, so hold last known good angles
+			if (Double.isNaN(hoodSolution)) return; // Unreachable, so hold last known good angles
 
 			// Refine flight time using actual horizontal velocity component
 			estimatedFlightTime = adjustedDist / (v0 * Math.cos(hoodSolution));

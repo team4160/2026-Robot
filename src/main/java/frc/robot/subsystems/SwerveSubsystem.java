@@ -13,7 +13,6 @@ import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.PathConstraints;
-import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.util.DriveFeedforwards;
 import com.pathplanner.lib.util.swerve.SwerveSetpoint;
 import com.pathplanner.lib.util.swerve.SwerveSetpointGenerator;
@@ -96,9 +95,11 @@ public class SwerveSubsystem extends SubsystemBase {
 	public void toggleVisionEnabled() {
 		visionEnabled = !visionEnabled;
 	}
+
 	public void toggleVisionEnabled(boolean v) {
 		visionEnabled = v;
 	}
+
 	public boolean getVisionEnabled() {
 		return visionEnabled;
 	}
@@ -194,10 +195,7 @@ public class SwerveSubsystem extends SubsystemBase {
 						swerveDrive.setChassisSpeeds(speedsRobotRelative);
 					}
 				},
-				new PPHolonomicDriveController(
-					new PIDConstants(5.0, 0.0, 0.0),
-					new PIDConstants(5.0, 0.0, 0.0)
-				),
+				new PPHolonomicDriveController(new PIDConstants(5.0, 0.0, 0.0), new PIDConstants(5.0, 0.0, 0.0)),
 				config,
 				() -> {
 					var alliance = DriverStation.getAlliance();
@@ -243,11 +241,7 @@ public class SwerveSubsystem extends SubsystemBase {
 			swerveDrive.getMaximumChassisAngularVelocity(),
 			Units.degreesToRadians(720)
 		);
-		return AutoBuilder.pathfindToPose(
-			pose,
-			constraints,
-			edu.wpi.first.units.Units.MetersPerSecond.of(0)
-		);
+		return AutoBuilder.pathfindToPose(pose, constraints, edu.wpi.first.units.Units.MetersPerSecond.of(0));
 	}
 
 	public Command driveToPose(Supplier<Pose2d> pose) {
@@ -307,14 +301,18 @@ public class SwerveSubsystem extends SubsystemBase {
 	public Command sysIdDriveMotorCommand() {
 		return SwerveDriveTest.generateSysIdCommand(
 			SwerveDriveTest.setDriveSysIdRoutine(new Config(), this, swerveDrive, 12, true),
-			3.0, 5.0, 3.0
+			3.0,
+			5.0,
+			3.0
 		);
 	}
 
 	public Command sysIdAngleMotorCommand() {
 		return SwerveDriveTest.generateSysIdCommand(
 			SwerveDriveTest.setAngleSysIdRoutine(new Config(), this, swerveDrive),
-			3.0, 5.0, 3.0
+			3.0,
+			5.0,
+			3.0
 		);
 	}
 
@@ -323,8 +321,9 @@ public class SwerveSubsystem extends SubsystemBase {
 	}
 
 	public Command driveForward() {
-		return run(() -> swerveDrive.drive(new Translation2d(1, 0), 0, false, false))
-			.finallyDo(() -> swerveDrive.drive(new Translation2d(0, 0), 0, false, false));
+		return run(() -> swerveDrive.drive(new Translation2d(1, 0), 0, false, false)).finallyDo(() ->
+			swerveDrive.drive(new Translation2d(0, 0), 0, false, false)
+		);
 	}
 
 	public void replaceSwerveModuleFeedforward(double kS, double kV, double kA) {
@@ -336,18 +335,20 @@ public class SwerveSubsystem extends SubsystemBase {
 		DoubleSupplier translationY,
 		DoubleSupplier angularRotationX
 	) {
-		return run(() -> swerveDrive.drive(
-			SwerveMath.scaleTranslation(
-				new Translation2d(
-					translationX.getAsDouble() * swerveDrive.getMaximumChassisVelocity(),
-					translationY.getAsDouble() * swerveDrive.getMaximumChassisVelocity()
+		return run(() ->
+			swerveDrive.drive(
+				SwerveMath.scaleTranslation(
+					new Translation2d(
+						translationX.getAsDouble() * swerveDrive.getMaximumChassisVelocity(),
+						translationY.getAsDouble() * swerveDrive.getMaximumChassisVelocity()
+					),
+					0.8
 				),
-				0.8
-			),
-			Math.pow(angularRotationX.getAsDouble(), 3) * swerveDrive.getMaximumChassisAngularVelocity(),
-			true,
-			false
-		));
+				Math.pow(angularRotationX.getAsDouble(), 3) * swerveDrive.getMaximumChassisAngularVelocity(),
+				true,
+				false
+			)
+		);
 	}
 
 	public Command driveCommand(

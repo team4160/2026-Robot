@@ -124,7 +124,6 @@ public class Vision {
 				double x = pose.estimatedPose.getX();
 				double y = pose.estimatedPose.getY();
 				if (x < 0 || x > 17.0 || y < 0 || y > 8.5) continue; // 2026 field dims
-				
 				swerveDrive.addVisionMeasurement(
 					pose.estimatedPose.toPose2d(),
 					pose.timestampSeconds,
@@ -369,8 +368,6 @@ public class Vision {
 				cameraSim = new PhotonCameraSim(camera, cameraProp);
 				cameraSim.enableDrawWireframe(true);
 			}
-
-			
 		}
 
 		/**

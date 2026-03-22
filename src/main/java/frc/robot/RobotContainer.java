@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.commands.ShootOnTheMoveCommand;
 import frc.robot.constants.OperatorConstants;
 import frc.robot.subsystems.HoodSubsystem;
 import frc.robot.subsystems.IntakeArmSubsystem;
@@ -37,7 +38,6 @@ import frc.robot.subsystems.TurretSubsystem;
 import frc.robot.utils.EqualsUtil;
 import frc.robot.utils.field.AllianceFlipUtil;
 import frc.robot.utils.field.FieldConstants;
-
 import java.io.File;
 import swervelib.SwerveInputStream;
 
@@ -71,9 +71,17 @@ public class RobotContainer {
 
 	private boolean visionEnabled = true;
 
-	public ShooterSubsystem getShooter() { return shooter; }
-	public TurretSubsystem getTurret() { return turret; }
-	public HoodSubsystem getHood() { return hood; }
+	public ShooterSubsystem getShooter() {
+		return shooter;
+	}
+
+	public TurretSubsystem getTurret() {
+		return turret;
+	}
+
+	public HoodSubsystem getHood() {
+		return hood;
+	}
 
 	// final ScoringSystem scoringSystem = new ScoringSystem(
 	// 	shooter,
@@ -160,10 +168,7 @@ public class RobotContainer {
 			intakeArm.setAngle(Degrees.of(0)).alongWith(intake.set(-0.75).withTimeout(15))
 		);
 		NamedCommands.registerCommand("stopIntake", intake.set(0).withTimeout(1));
-		NamedCommands.registerCommand(
-			"raiseIntake",
-			intakeArm.setAngle(Degrees.of(30)).withTimeout(3)
-		);
+		NamedCommands.registerCommand("raiseIntake", intakeArm.setAngle(Degrees.of(30)).withTimeout(3));
 
 		NamedCommands.registerCommand(
 			"shoot",
@@ -172,7 +177,7 @@ public class RobotContainer {
 				.withTimeout(0.5)
 				.andThen(spindexer.set(0.65).alongWith(kicker.set(-1)))
 				.withTimeout(5)
-				.finallyDo(end -> shooter.set(0))
+				.finallyDo(end -> shooter.set(0).alongWith(spindexer.set(0).alongWith(kicker.set(0))))
 		);
 	}
 
@@ -241,9 +246,8 @@ public class RobotContainer {
 		}
 
 		// Vision kill switch — operator start button toggles vision on/off without redeploying
-		operatorXbox.start().onTrue(Commands.runOnce(
-			() -> drivebase.toggleVisionEnabled()
-		));
+		driverXbox.start().onTrue(Commands.runOnce(() -> drivebase.toggleVisionEnabled()));
+		operatorXbox.start().toggleOnTrue(new ShootOnTheMoveCommand(drivebase, this));
 
 		operatorXbox
 			.leftTrigger()
@@ -278,25 +282,21 @@ public class RobotContainer {
 
 	public boolean inNeutralZone() {
 		double x = AllianceFlipUtil.apply(drivebase.getPose()).getX();
-		return x > FieldConstants.LinesVertical.neutralZoneNear
-			&& x < FieldConstants.LinesVertical.neutralZoneFar;
+		return x > FieldConstants.LinesVertical.neutralZoneNear && x < FieldConstants.LinesVertical.neutralZoneFar;
 	}
 
 	public boolean inLeftNeutralZone() {
 		Pose2d flippedPose = AllianceFlipUtil.apply(drivebase.getPose());
-		return inNeutralZone()
-			&& flippedPose.getY() > FieldConstants.LinesHorizontal.center;
+		return inNeutralZone() && flippedPose.getY() > FieldConstants.LinesHorizontal.center;
 	}
 
 	public boolean inRightNeutralZone() {
 		Pose2d flippedPose = AllianceFlipUtil.apply(drivebase.getPose());
-		return inNeutralZone()
-			&& flippedPose.getY() < FieldConstants.LinesHorizontal.center;
+		return inNeutralZone() && flippedPose.getY() < FieldConstants.LinesHorizontal.center;
 	}
 
 	public boolean inScoringZone() {
 		double x = AllianceFlipUtil.apply(drivebase.getPose()).getX();
-		return x >= FieldConstants.LinesVertical.allianceZone
-			&& x < FieldConstants.LinesVertical.neutralZoneNear;
+		return x >= FieldConstants.LinesVertical.allianceZone && x < FieldConstants.LinesVertical.neutralZoneNear;
 	}
 }
