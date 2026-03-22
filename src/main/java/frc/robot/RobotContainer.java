@@ -139,6 +139,7 @@ public class RobotContainer {
 
 		// Add a simple auto option to have the robot drive forward for 1 second then stop
 		autoChooser.addOption("Drive Forward", drivebase.driveForward().withTimeout(1));
+		autoChooser.addOption("testShoot", NamedCommands.getCommand("shoot"));
 
 		// Put the autoChooser on the SmartDashboard
 		SmartDashboard.putData("Auto Chooser", autoChooser);
@@ -156,19 +157,23 @@ public class RobotContainer {
 		// );
 		NamedCommands.registerCommand(
 			"runIntake",
-			intakeArm.setAngle(Degrees.of(0)).andThen(intake.set(-0.75)).repeatedly()
+			intakeArm.setAngle(Degrees.of(0)).alongWith(intake.set(-0.75).withTimeout(15))
 			// What's up with the -?
 		);
-		NamedCommands.registerCommand("stopIntake", intake.set(0));
+		NamedCommands.registerCommand("stopIntake", intake.set(0).withTimeout(1));
 		NamedCommands.registerCommand(
 			"raiseIntake",
-			intakeArm.setAngle(Degrees.of(30))
+			intakeArm.setAngle(Degrees.of(30)).withTimeout(3)
 			// ASK MATIAS FOR BEST ANGLE WHEN HE GETS BACK.
 		);
 
 		NamedCommands.registerCommand(
 			"shoot",
-			shooter.setVelocity(RPM.of(4000)).alongWith(spindexer.set(0.75).alongWith(kicker.set(-1)))
+			shooter
+				.setVelocity(RPM.of(4000))
+				.alongWith(spindexer.set(0.65).alongWith(kicker.set(-1)))
+				.withTimeout(5)
+				.finallyDo(end -> shooter.set(0))
 		);
 		// NamedCommands.registerCommand("aimOnMove",
 		// 	new ShootOnTheMoveCommand(drivebase, scoringSystem).withName("OperatorControls.aimCommand")
@@ -268,8 +273,8 @@ public class RobotContainer {
 
 		// operatorXbox.x().whileTrue(intakeArm.set(1)).whileFalse(intakeArm.set(0));
 
-		operatorXbox.rightTrigger().whileTrue(spindexer.set(0.65)).onFalse(kicker.set(0.25).withTimeout(1));
-		operatorXbox.rightTrigger().whileTrue(kicker.set(-1));
+		operatorXbox.rightTrigger().whileTrue(spindexer.set(0.65));
+		operatorXbox.rightTrigger().whileTrue(kicker.set(-0.75)).onFalse(kicker.set(0.25).withTimeout(1));
 
 		operatorXbox.leftBumper().toggleOnTrue(hood.setAngle(Degrees.of(23)));
 		operatorXbox.rightBumper().toggleOnTrue(hood.setAngle(Degrees.of(30)));

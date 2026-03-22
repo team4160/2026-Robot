@@ -57,13 +57,19 @@ public class ShooterSubsystem extends SubsystemBase {
 		// Motor properties to prevent over currenting.
 		.withMotorInverted(false)
 		.withIdleMode(MotorMode.COAST)
-		.withStatorCurrentLimit(Amps.of(40))
+		.withStatorCurrentLimit(Amps.of(80))
+		.withSupplyCurrentLimit(Amps.of(40))
 		.withFollowers(Pair.of(shooterFollower, false));
 
 	// Create our SmartMotorController
 	private SmartMotorController shooterLeaderMotor = new TalonFXWrapper(
 		shooterLeader,
 		DCMotor.getKrakenX60(2),
+		smcConfig
+	);
+	private SmartMotorController shooterFollowMotor = new TalonFXWrapper(
+		shooterFollower,
+		DCMotor.getKrakenX60(1),
 		smcConfig
 	);
 
@@ -77,9 +83,20 @@ public class ShooterSubsystem extends SubsystemBase {
 		.withLowerSoftLimit(RPM.of(0))
 		// Telemetry name and verbosity for the arm.
 		.withTelemetry("Shooter Mech", GenericConstants.kTelemetryVerbosity);
+	private final FlyWheelConfig shooterFConfig = new FlyWheelConfig(shooterFollowMotor)
+		// Diameter of the flywheel.
+		.withDiameter(Inches.of(4))
+		// Mass of the flywheel.
+		.withMass(Pounds.of(1))
+		// Maximum speed of the shooter.
+		.withUpperSoftLimit(RPM.of(100))
+		.withLowerSoftLimit(RPM.of(0))
+		// Telemetry name and verbosity for the arm.
+		.withTelemetry("Shooter Mech", GenericConstants.kTelemetryVerbosity);
 
 	// Shooter Mechanism
 	private FlyWheel shooter = new FlyWheel(shooterConfig);
+	private FlyWheel shooterF = new FlyWheel(shooterFConfig);
 
 	/**
 	 * Gets the current velocity of the shooter.

@@ -67,7 +67,7 @@ public class TurretSubsystem extends SubsystemBase {
 			.withGearing(new MechanismGearing(GearBox.fromStages("5:1", "200:20")))
 			.withIdleMode(MotorMode.BRAKE)
 			.withTelemetry("TurretMotorV2", GenericConstants.kTelemetryVerbosity)
-			// .withStatorCurrentLimit(Amps.of(40))
+			.withStatorCurrentLimit(Amps.of(80))
 			.withSupplyCurrentLimit(Amps.of(40))
 			.withMotorInverted(false)
 			// .withStartingPosition(cancoder.getPosition().getValue().times(21 / 200))

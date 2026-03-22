@@ -53,6 +53,7 @@ public class KickerSubsystem extends SubsystemBase {
 		// Motor properties to prevent over currenting.
 		.withMotorInverted(false)
 		.withIdleMode(MotorMode.COAST)
+		.withSupplyCurrentLimit(Amps.of(20))
 		.withStatorCurrentLimit(Amps.of(40));
 
 	// Create our SmartMotorController

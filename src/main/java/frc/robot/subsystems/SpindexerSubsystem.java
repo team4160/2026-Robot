@@ -50,8 +50,8 @@ public class SpindexerSubsystem extends SubsystemBase {
 		// Motor properties to prevent over currenting.
 		.withMotorInverted(true)
 		.withIdleMode(MotorMode.COAST)
-		.withSupplyCurrentLimit(Amps.of(50));
-	// .withStatorCurrentLimit(Amps.of(-1));
+		.withSupplyCurrentLimit(Amps.of(25))
+		.withStatorCurrentLimit(Amps.of(50));
 
 	// Create our SmartMotorController
 	private SmartMotorController motor = new TalonFXWrapper(spark, DCMotor.getFalcon500(1), smcConfig);
