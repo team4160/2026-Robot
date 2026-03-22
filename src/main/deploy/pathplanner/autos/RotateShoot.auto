@@ -34,6 +34,24 @@
               }
             ]
           }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Comeback"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "goshoot"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "shoot"
+          }
         }
       ]
     }

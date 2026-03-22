@@ -125,6 +125,9 @@ public class RobotContainer {
 
 	/** The container for the robot. Contains subsystems, OI devices, and commands. */
 	public RobotContainer() {
+		// com.revrobotics.
+		// com.studica.frc.Navx gyro = (com.studica.frc.Navx) drivebase.getSwerveDrive().getGyro().getIMU();
+
 		// Configure the trigger bindings
 		configureBindings();
 		RegisterAutos();
@@ -146,41 +149,22 @@ public class RobotContainer {
 	}
 
 	private void RegisterAutos() {
-		// these two are all we really need
-
-		// NamedCommands.registerCommand(
-		// 	"intake",
-		// 	intake.set(-IntakeConstants.kIntakeDutyCycle)
-		// 	// .andThen(
-		// 	// 	intake.set(IntakeConstants.kIntakeDutyCycle)
-		// 	// )
-		// );
 		NamedCommands.registerCommand(
 			"runIntake",
 			intakeArm.setAngle(Degrees.of(0)).alongWith(intake.set(-0.75).withTimeout(15))
-			// What's up with the -?
 		);
 		NamedCommands.registerCommand("stopIntake", intake.set(0).withTimeout(1));
-		NamedCommands.registerCommand(
-			"raiseIntake",
-			intakeArm.setAngle(Degrees.of(30)).withTimeout(3)
-			// ASK MATIAS FOR BEST ANGLE WHEN HE GETS BACK.
-		);
+		NamedCommands.registerCommand("raiseIntake", intakeArm.setAngle(Degrees.of(30)).withTimeout(3));
 
 		NamedCommands.registerCommand(
 			"shoot",
 			shooter
 				.setVelocity(RPM.of(4000))
-				.alongWith(spindexer.set(0.65).alongWith(kicker.set(-1)))
+				.withTimeout(0.5)
+				.andThen(spindexer.set(0.65).alongWith(kicker.set(-1)))
 				.withTimeout(5)
-				.finallyDo(end -> shooter.set(0))
+				.finallyDo(end -> shooter.set(0).alongWith(spindexer.set(0).alongWith(kicker.set(0))))
 		);
-		// NamedCommands.registerCommand("aimOnMove",
-		// 	new ShootOnTheMoveCommand(drivebase, scoringSystem).withName("OperatorControls.aimCommand")
-		// 	.alongWith(
-		// 		spindexer.set(-.85).alongWith(kicker.set(-0.25)).withTimeout(0.5)
-		// 	)
-		// );
 	}
 
 	/**
