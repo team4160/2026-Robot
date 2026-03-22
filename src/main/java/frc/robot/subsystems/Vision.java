@@ -265,7 +265,7 @@ public class Vision {
 		 */
 		BACK_CAM(
 			"back",
-			new Rotation3d(0, Units.degreesToRadians(0), 180),
+			new Rotation3d(0, Units.degreesToRadians(0), Units.degreesToRadians(180)),
 			new Translation3d(Units.inchesToMeters(3), Units.inchesToMeters(-12), Units.inchesToMeters(19)),
 			VecBuilder.fill(4, 4, 999999999),
 			VecBuilder.fill(0.5, 0.5, 10)
