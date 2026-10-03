@@ -19,6 +19,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -26,6 +27,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.commands.ShootOnTheMoveCommand;
 import frc.robot.constants.OperatorConstants;
 import frc.robot.subsystems.HoodSubsystem;
 import frc.robot.subsystems.IntakeArmSubsystem;
@@ -166,6 +168,20 @@ public class RobotContainer {
 				.withTimeout(5)
 				.finallyDo(end -> shooter.set(0).alongWith(spindexer.set(0).alongWith(kicker.set(0))))
 		);
+
+		// Aim only (put in parallel with a path; ends when the path/group ends)
+		NamedCommands.registerCommand("aimOnMove", new ShootOnTheMoveCommand(drivebase, turret, hood, shooter));
+
+		// Aim while moving, feed once ready (or after 1.5s), feed for 2s, then stop
+		ShootOnTheMoveCommand autoSotm = new ShootOnTheMoveCommand(drivebase, turret, hood, shooter);
+		NamedCommands.registerCommand(
+			"shootOnMove",
+			autoSotm.deadlineFor(
+				Commands.waitUntil(autoSotm::isReady)
+					.withTimeout(1.5)
+					.andThen(spindexer.set(0.65).alongWith(kicker.set(-1)).withTimeout(2))
+			)
+		);
 	}
 
 	/**
@@ -241,7 +257,17 @@ public class RobotContainer {
 			driverXbox.y().whileTrue(Commands.runOnce(drivebase::lock, drivebase).repeatedly());
 		}
 
-		//operatorXbox.a().toggleOnTrue(new ShootOnTheMoveCommand(drivebase, scoringSystem).withName("OperatorControls.aimCommand"));
+		// Shoot on the move: A toggles tracking, right trigger (below) feeds. Rumble when ready to fire.
+		ShootOnTheMoveCommand shootOnTheMove = new ShootOnTheMoveCommand(drivebase, turret, hood, shooter);
+		operatorXbox.a().toggleOnTrue(shootOnTheMove);
+		shootOnTheMove
+			.readyTrigger()
+			.whileTrue(
+				Commands.startEnd(
+					() -> operatorXbox.setRumble(RumbleType.kBothRumble, 0.4),
+					() -> operatorXbox.setRumble(RumbleType.kBothRumble, 0)
+				)
+			);
 
 		// operatorXbox.a().whileTrue(intake.set(IntakeConstants.kIntakeDutyCycle));
 		// operatorXbox.leftTrigger().whileTrue(intake.set(-IntakeConstants.kIntakeDutyCycle));

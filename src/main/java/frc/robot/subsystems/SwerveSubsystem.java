@@ -65,8 +65,8 @@ public class SwerveSubsystem extends SubsystemBase {
 	/**
 	 * Enable vision odometry updates while driving.
 	 */
-	private final boolean visionOdometer = false;
-
+	private final boolean visionOdometer = true;
+	private double ignoreVisionUntil = 0;
 	/**
 	 * PhotonVision class to keep an accurate odometry.
 	 */
@@ -142,10 +142,11 @@ public class SwerveSubsystem extends SubsystemBase {
 
 	@Override
 	public void periodic() {
-		// When vision is enabled we must manually update odometry in SwerveDrive
 		if (visionOdometer) {
 			swerveDrive.updateOdometry();
-			vision.updatePoseEstimation(swerveDrive);
+			if (Timer.getFPGATimestamp() > ignoreVisionUntil) {
+				vision.updatePoseEstimation(swerveDrive);
+			}
 			System.out.println("Distance to tag 14 " + vision.getDistanceFromAprilTag(14));
 		}
 		SwerveState.CurrentPose = swerveDrive.getPose();
@@ -599,11 +600,11 @@ public class SwerveSubsystem extends SubsystemBase {
 	public void zeroGyroWithAlliance() {
 		if (!isRedAlliance()) {
 			zeroGyro();
-			//Set the pose 180 degrees
 			resetOdometry(new Pose2d(getPose().getTranslation(), Rotation2d.fromDegrees(180)));
 		} else {
 			zeroGyro();
 		}
+		ignoreVisionUntil = Timer.getFPGATimestamp() + 1.0;
 	}
 
 	/**
