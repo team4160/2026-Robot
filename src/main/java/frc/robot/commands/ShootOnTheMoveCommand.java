@@ -145,10 +145,11 @@ public class ShootOnTheMoveCommand extends ParallelCommandGroup {
 		// Turret: field aim angle -> robot relative -> raw turret angle
 		Rotation2d fieldAim = target.minus(virtualPos).getAngle();
 		double robotRelDeg = fieldAim.minus(heading).getDegrees();
+		SmartDashboard.putNumber("SOTM/RobotRelAimDeg", robotRelDeg);
 		publishTuningEntries();
 		double trimDeg = SmartDashboard.getNumber("SOTM/TurretTrimDeg", ShotingOnTheFlyConstants.kTurretTrimDeg);
 		double rawDeg = MathUtil.inputModulus(
-			robotRelDeg - ShotingOnTheFlyConstants.kTurretZeroOffsetDeg + trimDeg,
+			-(robotRelDeg - ShotingOnTheFlyConstants.kTurretZeroOffsetDeg) + trimDeg,
 			-180.0,
 			180.0
 		);
