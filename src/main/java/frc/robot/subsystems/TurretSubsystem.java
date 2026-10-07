@@ -73,7 +73,7 @@ public class TurretSubsystem extends SubsystemBase {
 			// .withStartingPosition(cancoder.getPosition().getValue().times(21 / 200))
 			// .withStartingPosition(Degrees.of(0))
 			.withExternalEncoder(cancoder)
-			.withExternalEncoderGearing(200 / 21)
+			.withExternalEncoderGearing(200.0 / 21.0) // must be decimals: 200 / 21 is integer math = 9, real ratio is 9.52
 			.withUseExternalFeedbackEncoder(true)
 			.withControlMode(ControlMode.CLOSED_LOOP);
 

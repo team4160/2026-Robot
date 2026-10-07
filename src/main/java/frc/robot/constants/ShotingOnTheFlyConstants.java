@@ -49,20 +49,14 @@ public class ShotingOnTheFlyConstants {
 	/**
 	 * Shot table: {distance from turret to hub center (m), flywheel RPM, hood angle (deg), time of flight (s)}.
 	 *
-	 * <p>TODO: THESE ARE PLACEHOLDERS - tune on the real robot. Turn on "SOTM/TuningMode", park the robot at
-	 * several distances, dial in RPM + hood on the dashboard until it scores, and record "SOTM/Distance". Time of
-	 * flight is best measured from slow-mo video (ball leaves shooter -> ball enters hub). Hood must stay within
-	 * 1-35 deg.
+	 * <p>RPM + hood measured stationary on 2026-10-06 (tuning mode). Only covers 3.0-4.6 m; outside that SOTM/InRange is
+	 * false. Time of flight from 240 fps slow-mo (ball leaves shooter -> drops through hub top), assuming a 30 fps
+	 * Premiere sequence: slow-mo playback time / 8. Check point: 3.87 m measured 1.27 s. TODO: add rows near 3.3 m and
+	 * 4.2 m, hood jumps a lot between 3.0 and 3.7 m. Keep rows sorted by distance and hood within 1-35 deg.
 	 */
 	public static final double[][] kShotTable = {
-		{ 1.5, 3400, 12.0, 0.80 },
-		{ 2.0, 3600, 17.0, 0.85 },
-		{ 2.5, 3800, 21.0, 0.90 },
-		{ 3.0, 4000, 23.0, 0.95 },
-		{ 3.5, 4200, 26.0, 1.00 },
-		{ 4.0, 4400, 28.0, 1.05 },
-		{ 4.5, 4650, 30.0, 1.10 },
-		{ 5.0, 4900, 32.0, 1.15 },
-		{ 5.5, 5150, 34.0, 1.20 },
+		{ 3.02, 4000, 12.5, 1.19 }, // avg of 3.01 m / hood 13 and 3.04 m / hood 12; tof from video 1 (9:15 slow-mo)
+		{ 3.68, 4200, 25.0, 1.25 }, // tof estimated between video 1 and the 3.87 m check point (no video)
+		{ 4.64, 4500, 26.0, 1.29 }, // tof from video 2 (10:10 slow-mo)
 	};
 }
