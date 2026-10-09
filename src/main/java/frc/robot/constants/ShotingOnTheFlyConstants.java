@@ -31,6 +31,12 @@ public class ShotingOnTheFlyConstants {
 	 */
 	public static final double kTurretTrimDeg = 0.0;
 
+	/**
+	 * True = turret positive is opposite to robot-relative positive (the "-(...)" flip). Live-test with
+	 * "SOTM/TurretFlipped" on the dashboard; if the other setting aims better, change this to match.
+	 */
+	public static final boolean kTurretFlipped = true;
+
 	/** Turret usable range in raw degrees; kept a little inside the soft limits in TurretSubsystem (-80, 111). */
 	public static final double kTurretMinDeg = -78.0;
 	public static final double kTurretMaxDeg = 109.0;
@@ -42,21 +48,25 @@ public class ShotingOnTheFlyConstants {
 	public static final int kLookaheadIterations = 10;
 
 	// Readiness tolerances
-	public static final double kTurretToleranceDeg = 2.0;
-	public static final double kHoodToleranceDeg = 1.0;
-	public static final double kShooterToleranceRPM = 100.0;
+	public static final double kTurretToleranceDeg = 3.0;
+	public static final double kHoodToleranceDeg = 1.5;
+	public static final double kShooterToleranceRPM = 150.0;
 
 	/**
 	 * Shot table: {distance from turret to hub center (m), flywheel RPM, hood angle (deg), time of flight (s)}.
 	 *
-	 * <p>RPM + hood measured stationary on 2026-10-06 (tuning mode). Only covers 3.0-4.6 m; outside that SOTM/InRange is
-	 * false. Time of flight from 240 fps slow-mo (ball leaves shooter -> drops through hub top), assuming a 30 fps
-	 * Premiere sequence: slow-mo playback time / 8. Check point: 3.87 m measured 1.27 s. TODO: add rows near 3.3 m and
-	 * 4.2 m, hood jumps a lot between 3.0 and 3.7 m. Keep rows sorted by distance and hood within 1-35 deg.
+	 * <p>Measured standing still in tuning mode. Time of flight = 240 fps slow-mo playback time (Premiere sec:frames,
+	 * 30 fps) / 8, ball leaves shooter -> drops through hub top. 2026-10-08 session replaces the old 3.02 m row.
+	 * Distances from the left side of the field may be off (vision was less accurate there). Keep rows sorted by
+	 * distance and hood within 1-35 deg. Range is 2.0-4.9 m; outside that SOTM/InRange is false.
 	 */
 	public static final double[][] kShotTable = {
-		{ 3.02, 4000, 12.5, 1.19 }, // avg of 3.01 m / hood 13 and 3.04 m / hood 12; tof from video 1 (9:15 slow-mo)
-		{ 3.68, 4200, 25.0, 1.25 }, // tof estimated between video 1 and the 3.87 m check point (no video)
-		{ 4.64, 4500, 26.0, 1.29 }, // tof from video 2 (10:10 slow-mo)
+		{ 2.00, 3200, 5.0, 1.01 }, // 10-08, 8:02
+		{ 2.33, 3600, 10.0, 1.17 }, // 10-08, 9:10 (higher arc than neighbors, so longer tof)
+		{ 2.87, 3500, 15.0, 1.03 }, // 10-08, 8:06
+		{ 3.23, 4100, 21.0, 1.06 }, // 10-08, 8:15
+		{ 3.68, 4200, 25.0, 1.25 }, // 10-06, tof estimated
+		{ 4.64, 4500, 26.0, 1.29 }, // 10-06, 10:10
+		{ 4.91, 4300, 20.0, 1.31 }, // 10-08, 10:15 (trim was -27 on this shot, double-check)
 	};
 }

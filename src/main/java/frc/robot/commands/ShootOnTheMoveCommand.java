@@ -58,6 +58,7 @@ public class ShootOnTheMoveCommand extends ParallelCommandGroup {
 		SmartDashboard.setDefaultNumber("SOTM/TuningRPM", 4000);
 		SmartDashboard.setDefaultNumber("SOTM/TuningHoodDeg", 23);
 		SmartDashboard.setDefaultNumber("SOTM/TurretTrimDeg", ShotingOnTheFlyConstants.kTurretTrimDeg);
+		SmartDashboard.setDefaultBoolean("SOTM/TurretFlipped", ShotingOnTheFlyConstants.kTurretFlipped);
 	}
 
 	private final SwerveSubsystem drivebase;
@@ -148,8 +149,11 @@ public class ShootOnTheMoveCommand extends ParallelCommandGroup {
 		SmartDashboard.putNumber("SOTM/RobotRelAimDeg", robotRelDeg);
 		publishTuningEntries();
 		double trimDeg = SmartDashboard.getNumber("SOTM/TurretTrimDeg", ShotingOnTheFlyConstants.kTurretTrimDeg);
+		double direction = SmartDashboard.getBoolean("SOTM/TurretFlipped", ShotingOnTheFlyConstants.kTurretFlipped)
+			? -1.0
+			: 1.0;
 		double rawDeg = MathUtil.inputModulus(
-			-(robotRelDeg - ShotingOnTheFlyConstants.kTurretZeroOffsetDeg) + trimDeg,
+			direction * (robotRelDeg - ShotingOnTheFlyConstants.kTurretZeroOffsetDeg) + trimDeg,
 			-180.0,
 			180.0
 		);

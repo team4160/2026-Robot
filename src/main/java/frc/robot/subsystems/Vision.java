@@ -247,8 +247,8 @@ public class Vision {
 			"left",
 			new Rotation3d(0, Math.toRadians(0), Math.toRadians(90)),
 			new Translation3d(Units.inchesToMeters(13.5), Units.inchesToMeters(-8), Units.inchesToMeters(19)),
-			VecBuilder.fill(4, 4, 8),
-			VecBuilder.fill(0.5, 0.5, 1)
+			VecBuilder.fill(4, 4, 999999999), // don't let vision change heading (matches BACK_CAM on main)
+			VecBuilder.fill(0.5, 0.5, 10)
 		),
 		// /**
 		//  * Right Camera
@@ -257,8 +257,8 @@ public class Vision {
 			"right",
 			new Rotation3d(0, Math.toRadians(0), Math.toRadians(-90)),
 			new Translation3d(Units.inchesToMeters(-13.5), Units.inchesToMeters(-8), Units.inchesToMeters(19)),
-			VecBuilder.fill(4, 4, 8),
-			VecBuilder.fill(0.5, 0.5, 1)
+			VecBuilder.fill(4, 4, 999999999), // don't let vision change heading (matches BACK_CAM on main)
+			VecBuilder.fill(0.5, 0.5, 10)
 		),
 		/**
 		 * Center Camera
