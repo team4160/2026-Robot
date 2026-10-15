@@ -47,6 +47,14 @@ public class ShotingOnTheFlyConstants {
 	/** Fixed-point iterations used to solve for time of flight while moving. */
 	public static final int kLookaheadIterations = 10;
 
+	/**
+	 * Slow the drive while SOTM is tracking AND the operator holds right trigger (feeding). Toggle live with
+	 * "SOTM/SlowDriveEnabled" on the dashboard.
+	 */
+	public static final boolean kSlowDriveEnabled = true;
+	public static final double kSlowDriveTranslationScale = 0.5;
+	public static final double kSlowDriveRotationScale = 0.6;
+
 	// Readiness tolerances
 	public static final double kTurretToleranceDeg = 3.0;
 	public static final double kHoodToleranceDeg = 1.5;

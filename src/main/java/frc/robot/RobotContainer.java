@@ -29,6 +29,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.ShootOnTheMoveCommand;
 import frc.robot.constants.OperatorConstants;
+import frc.robot.constants.ShotingOnTheFlyConstants;
 import frc.robot.subsystems.HoodSubsystem;
 import frc.robot.subsystems.IntakeArmSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
@@ -86,10 +87,10 @@ public class RobotContainer {
 	 */
 	SwerveInputStream driveAngularVelocity = SwerveInputStream.of(
 		drivebase.getSwerveDrive(),
-		() -> EqualsUtil.sensitivity(-driverXbox.getLeftY(), 0.75),
-		() -> EqualsUtil.sensitivity(-driverXbox.getLeftX(), 0.75)
+		() -> EqualsUtil.sensitivity(-driverXbox.getLeftY(), 0.75) * sotmTranslationScale(),
+		() -> EqualsUtil.sensitivity(-driverXbox.getLeftX(), 0.75) * sotmTranslationScale()
 	)
-		.withControllerRotationAxis(() -> EqualsUtil.sensitivity(-driverXbox.getRightX(), 0.75))
+		.withControllerRotationAxis(() -> EqualsUtil.sensitivity(-driverXbox.getRightX(), 0.75) * sotmRotationScale())
 		.deadband(OperatorConstants.DEADBAND)
 		.scaleTranslation(0.8)
 		.allianceRelativeControl(true);
@@ -108,10 +109,10 @@ public class RobotContainer {
 
 	SwerveInputStream driveAngularVelocityKeyboard = SwerveInputStream.of(
 		drivebase.getSwerveDrive(),
-		() -> driverXbox.getLeftY(),
-		() -> driverXbox.getLeftX()
+		() -> driverXbox.getLeftY() * sotmTranslationScale(),
+		() -> driverXbox.getLeftX() * sotmTranslationScale()
 	)
-		.withControllerRotationAxis(() -> driverXbox.getRawAxis(2))
+		.withControllerRotationAxis(() -> driverXbox.getRawAxis(2) * sotmRotationScale())
 		.deadband(OperatorConstants.DEADBAND)
 		.scaleTranslation(0.8)
 		.allianceRelativeControl(true);
@@ -126,6 +127,28 @@ public class RobotContainer {
 		.translationHeadingOffset(true)
 		.translationHeadingOffset(Rotation2d.fromDegrees(0));
 
+	// Teleop shoot-on-the-move command, created in configureBindings. Read by the drive scaling below.
+	private ShootOnTheMoveCommand shootOnTheMove;
+
+	/** True while SOTM is tracking and the operator is feeding, if slow drive is enabled on the dashboard. */
+	private boolean sotmSlowDriveActive() {
+		boolean active =
+			SmartDashboard.getBoolean("SOTM/SlowDriveEnabled", ShotingOnTheFlyConstants.kSlowDriveEnabled) &&
+			shootOnTheMove != null &&
+			shootOnTheMove.isScheduled() &&
+			operatorXbox.getRightTriggerAxis() > 0.5;
+		SmartDashboard.putBoolean("SOTM/SlowDriveActive", active);
+		return active;
+	}
+
+	private double sotmTranslationScale() {
+		return sotmSlowDriveActive() ? ShotingOnTheFlyConstants.kSlowDriveTranslationScale : 1.0;
+	}
+
+	private double sotmRotationScale() {
+		return sotmSlowDriveActive() ? ShotingOnTheFlyConstants.kSlowDriveRotationScale : 1.0;
+	}
+
 	/** The container for the robot. Contains subsystems, OI devices, and commands. */
 	public RobotContainer() {
 		// com.revrobotics.
@@ -135,6 +158,7 @@ public class RobotContainer {
 		configureBindings();
 		RegisterAutos();
 		DriverStation.silenceJoystickConnectionWarning(true);
+		SmartDashboard.setDefaultBoolean("SOTM/SlowDriveEnabled", ShotingOnTheFlyConstants.kSlowDriveEnabled);
 		DataLogManager.start();
 
 		// Create the NamedCommands that will be used in PathPlanner
@@ -258,7 +282,7 @@ public class RobotContainer {
 		}
 
 		// Shoot on the move: A toggles tracking, right trigger (below) feeds. Rumble when ready to fire.
-		ShootOnTheMoveCommand shootOnTheMove = new ShootOnTheMoveCommand(drivebase, turret, hood, shooter);
+		shootOnTheMove = new ShootOnTheMoveCommand(drivebase, turret, hood, shooter);
 		operatorXbox.a().toggleOnTrue(shootOnTheMove);
 		shootOnTheMove
 			.readyTrigger()
