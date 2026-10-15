@@ -56,9 +56,12 @@ public class ShotingOnTheFlyConstants {
 	public static final double kSlowDriveRotationScale = 0.6;
 
 	// Readiness tolerances
-	public static final double kTurretToleranceDeg = 3.0;
-	public static final double kHoodToleranceDeg = 1.5;
-	public static final double kShooterToleranceRPM = 150.0;
+	public static final double kTurretToleranceDeg = 5.0;
+	public static final double kHoodToleranceDeg = 2.5;
+	public static final double kShooterToleranceRPM = 250.0;
+
+	/** Point the turret this far into the future (s) to make up for turret lag while moving. 0 = off. Tune 0.05-0.15. */
+	public static final double kTurretLeadSecs = 0.08;
 
 	/**
 	 * Shot table: {distance from turret to hub center (m), flywheel RPM, hood angle (deg), time of flight (s)}.

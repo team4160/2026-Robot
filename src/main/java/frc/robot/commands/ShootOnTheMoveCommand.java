@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.RPM;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -73,6 +74,11 @@ public class ShootOnTheMoveCommand extends ParallelCommandGroup {
 	private boolean inRange = false;
 	private boolean turretReachable = false;
 
+	// Turret lead: estimate how fast the aim angle is changing and point a little ahead of it
+	private final LinearFilter turretRateFilter = LinearFilter.movingAverage(5);
+	private double lastAimDeg = Double.NaN;
+	private double aimDeg; // where the turret should point right now, before lead
+
 	public ShootOnTheMoveCommand(
 		SwerveSubsystem drivebase,
 		TurretSubsystem turret,
@@ -85,11 +91,13 @@ public class ShootOnTheMoveCommand extends ParallelCommandGroup {
 		this.shooter = shooter;
 
 		turretSetpointDeg = turret.getRawAngle().in(Degrees);
+		aimDeg = turretSetpointDeg;
 		hoodSetpointDeg = hood.getAngle().in(Degrees);
 		flywheelSetpointRPM = 0;
 
 		// Parallel groups execute children in order, so the solver runs before the mechanisms read it.
 		addCommands(
+			Commands.runOnce(this::resetLead),
 			Commands.run(this::calculate),
 			turret.setAngleDynamic(() -> Degrees.of(turretSetpointDeg)),
 			hood.setAngleDynamic(() -> Degrees.of(hoodSetpointDeg)),
@@ -159,7 +167,14 @@ public class ShootOnTheMoveCommand extends ParallelCommandGroup {
 		);
 		turretReachable =
 			rawDeg >= ShotingOnTheFlyConstants.kTurretMinDeg && rawDeg <= ShotingOnTheFlyConstants.kTurretMaxDeg;
-		turretSetpointDeg = clampToTurretRange(rawDeg);
+		// Turret lead: aim ahead by (how fast the aim angle is changing) x kTurretLeadSecs
+		double rateDegPerSec = Double.isNaN(lastAimDeg)
+			? 0
+			: MathUtil.inputModulus(rawDeg - lastAimDeg, -180, 180) / ShotingOnTheFlyConstants.loopPeriodSecs;
+		lastAimDeg = rawDeg;
+		double smoothedRate = turretRateFilter.calculate(rateDegPerSec);
+		aimDeg = clampToTurretRange(rawDeg);
+		turretSetpointDeg = clampToTurretRange(rawDeg + smoothedRate * ShotingOnTheFlyConstants.kTurretLeadSecs);
 
 		inRange = distance >= minDistance && distance <= maxDistance;
 		if (SmartDashboard.getBoolean("SOTM/TuningMode", false)) {
@@ -178,6 +193,9 @@ public class ShootOnTheMoveCommand extends ParallelCommandGroup {
 		SmartDashboard.putNumber("SOTM/FlywheelSetpointRPM", flywheelSetpointRPM);
 		SmartDashboard.putBoolean("SOTM/InRange", inRange);
 		SmartDashboard.putBoolean("SOTM/TurretReachable", turretReachable);
+		SmartDashboard.putBoolean("SOTM/TurretOnTarget", turretOnTarget());
+		SmartDashboard.putBoolean("SOTM/HoodOnTarget", hoodOnTarget());
+		SmartDashboard.putBoolean("SOTM/FlywheelAtSpeed", flywheelAtSpeed());
 		SmartDashboard.putBoolean("SOTM/Ready", isReady());
 		drivebase.getSwerveDrive().field.getObject("SOTM/AimPoint").setPose(new Pose2d(virtualPos, fieldAim));
 	}
@@ -192,18 +210,31 @@ public class ShootOnTheMoveCommand extends ParallelCommandGroup {
 		return distToMax < distToMin ? max : min;
 	}
 
-	/** True when a valid solution exists and every mechanism is at its setpoint. */
-	public boolean isReady() {
+	/** Forget the old aim so the lead doesn't jump when tracking starts again. */
+	private void resetLead() {
+		lastAimDeg = Double.NaN;
+		turretRateFilter.reset();
+	}
+
+	/** Compared against the real aim angle, not the led setpoint, so the lead doesn't block Ready. */
+	private boolean turretOnTarget() {
+		return Math.abs(turret.getRawAngle().in(Degrees) - aimDeg) < ShotingOnTheFlyConstants.kTurretToleranceDeg;
+	}
+
+	private boolean hoodOnTarget() {
+		return Math.abs(hood.getAngle().in(Degrees) - hoodSetpointDeg) < ShotingOnTheFlyConstants.kHoodToleranceDeg;
+	}
+
+	private boolean flywheelAtSpeed() {
 		return (
-			isScheduled() &&
-			inRange &&
-			turretReachable &&
-			Math.abs(turret.getRawAngle().in(Degrees) - turretSetpointDeg) <
-			ShotingOnTheFlyConstants.kTurretToleranceDeg &&
-			Math.abs(hood.getAngle().in(Degrees) - hoodSetpointDeg) < ShotingOnTheFlyConstants.kHoodToleranceDeg &&
 			Math.abs(shooter.getVelocity().in(RPM) - flywheelSetpointRPM) <
 			ShotingOnTheFlyConstants.kShooterToleranceRPM
 		);
+	}
+
+	/** True when a valid solution exists and every mechanism is close enough to fire. */
+	public boolean isReady() {
+		return isScheduled() && inRange && turretReachable && turretOnTarget() && hoodOnTarget() && flywheelAtSpeed();
 	}
 
 	public Trigger readyTrigger() {
