@@ -60,6 +60,7 @@ public class ShootOnTheMoveCommand extends ParallelCommandGroup {
 		SmartDashboard.setDefaultNumber("SOTM/TuningHoodDeg", 23);
 		SmartDashboard.setDefaultNumber("SOTM/TurretTrimDeg", ShotingOnTheFlyConstants.kTurretTrimDeg);
 		SmartDashboard.setDefaultBoolean("SOTM/TurretFlipped", ShotingOnTheFlyConstants.kTurretFlipped);
+		SmartDashboard.setDefaultNumber("SOTM/TurretLeadSecs", ShotingOnTheFlyConstants.kTurretLeadSecs);
 	}
 
 	private final SwerveSubsystem drivebase;
@@ -174,7 +175,8 @@ public class ShootOnTheMoveCommand extends ParallelCommandGroup {
 		lastAimDeg = rawDeg;
 		double smoothedRate = turretRateFilter.calculate(rateDegPerSec);
 		aimDeg = clampToTurretRange(rawDeg);
-		turretSetpointDeg = clampToTurretRange(rawDeg + smoothedRate * ShotingOnTheFlyConstants.kTurretLeadSecs);
+		double leadSecs = SmartDashboard.getNumber("SOTM/TurretLeadSecs", ShotingOnTheFlyConstants.kTurretLeadSecs);
+		turretSetpointDeg = clampToTurretRange(rawDeg + smoothedRate * leadSecs);
 
 		inRange = distance >= minDistance && distance <= maxDistance;
 		if (SmartDashboard.getBoolean("SOTM/TuningMode", false)) {
@@ -188,6 +190,7 @@ public class ShootOnTheMoveCommand extends ParallelCommandGroup {
 		SmartDashboard.putNumber("SOTM/Distance", distance);
 		SmartDashboard.putNumber("SOTM/TimeOfFlight", tof);
 		SmartDashboard.putNumber("SOTM/TurretSetpointDeg", turretSetpointDeg);
+		SmartDashboard.putNumber("SOTM/TurretAimDeg", aimDeg);
 		SmartDashboard.putNumber("SOTM/TurretActualDeg", turret.getRawAngle().in(Degrees));
 		SmartDashboard.putNumber("SOTM/HoodSetpointDeg", hoodSetpointDeg);
 		SmartDashboard.putNumber("SOTM/FlywheelSetpointRPM", flywheelSetpointRPM);

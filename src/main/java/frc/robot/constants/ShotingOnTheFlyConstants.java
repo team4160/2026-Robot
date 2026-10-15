@@ -60,7 +60,10 @@ public class ShotingOnTheFlyConstants {
 	public static final double kHoodToleranceDeg = 2.5;
 	public static final double kShooterToleranceRPM = 250.0;
 
-	/** Point the turret this far into the future (s) to make up for turret lag while moving. 0 = off. Tune 0.05-0.15. */
+	/**
+	 * Point the turret this far into the future (s) to make up for turret lag while moving. 0 = off. Tune 0.05-0.15
+	 * live with "SOTM/TurretLeadSecs" (compare SOTM/TurretAimDeg vs TurretActualDeg), then copy the value here.
+	 */
 	public static final double kTurretLeadSecs = 0.08;
 
 	/**
