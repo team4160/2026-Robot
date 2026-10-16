@@ -70,17 +70,18 @@ public class ShotingOnTheFlyConstants {
 	 * Shot table: {distance from turret to hub center (m), flywheel RPM, hood angle (deg), time of flight (s)}.
 	 *
 	 * <p>Measured standing still in tuning mode. Time of flight = 240 fps slow-mo playback time (Premiere sec:frames,
-	 * 30 fps) / 8, ball leaves shooter -> drops through hub top. 2026-10-08 session replaces the old 3.02 m row.
+	 * 30 fps, or iPhone Photos seconds) / 8, ball leaves shooter -> drops through hub top. Whole flight must be inside the slow part.
 	 * Distances from the left side of the field may be off (vision was less accurate there). Keep rows sorted by
-	 * distance and hood within 1-35 deg. Range is 2.0-4.9 m; outside that SOTM/InRange is false.
+	 * distance and hood within 1-35 deg. Range is 2.0-4.81 m; outside that SOTM/InRange is false.
 	 */
 	public static final double[][] kShotTable = {
-		{ 2.00, 3200, 5.0, 1.01 }, // 10-08, 8:02
-		{ 2.33, 3600, 10.0, 1.17 }, // 10-08, 9:10 (higher arc than neighbors, so longer tof)
-		{ 2.87, 3500, 15.0, 1.03 }, // 10-08, 8:06
-		{ 3.23, 4100, 21.0, 1.06 }, // 10-08, 8:15
-		{ 3.68, 4200, 25.0, 1.25 }, // 10-06, tof estimated
-		{ 4.64, 4500, 26.0, 1.29 }, // 10-06, 10:10
-		{ 4.91, 4300, 20.0, 1.31 }, // 10-08, 10:15 (trim was -27 on this shot, double-check)
+		{ 2.00, 3200, 5.0, 1.01 }, // 10-08, OLD (before camera fix), re-tune
+		{ 2.33, 3600, 10.0, 1.17 }, // 10-08, OLD (before camera fix), re-tune
+		{ 2.87, 3500, 15.0, 1.03 }, // 10-08, OLD (before camera fix), re-tune
+		{ 3.05, 3670, 20.0, 1.06 }, // 10-15
+		{ 3.39, 4000, 23.0, 1.11 }, // 10-15
+		{ 3.84, 4500, 24.0, 1.21 }, // 10-15
+		{ 4.56, 4700, 24.0, 1.28 }, // 10-15
+		{ 4.81, 4700, 25.0, 1.26 }, // 10-15
 	};
 }

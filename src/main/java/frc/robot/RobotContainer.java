@@ -87,10 +87,10 @@ public class RobotContainer {
 	 */
 	SwerveInputStream driveAngularVelocity = SwerveInputStream.of(
 		drivebase.getSwerveDrive(),
-		() -> EqualsUtil.sensitivity(-driverXbox.getLeftY(), 0.75) * sotmTranslationScale(),
-		() -> EqualsUtil.sensitivity(-driverXbox.getLeftX(), 0.75) * sotmTranslationScale()
+		() -> EqualsUtil.sensitivity(-driverXbox.getLeftY(), 0.75) * driveTranslationScale(),
+		() -> EqualsUtil.sensitivity(-driverXbox.getLeftX(), 0.75) * driveTranslationScale()
 	)
-		.withControllerRotationAxis(() -> EqualsUtil.sensitivity(-driverXbox.getRightX(), 0.75) * sotmRotationScale())
+		.withControllerRotationAxis(() -> EqualsUtil.sensitivity(-driverXbox.getRightX(), 0.75) * driveRotationScale())
 		.deadband(OperatorConstants.DEADBAND)
 		.scaleTranslation(0.8)
 		.allianceRelativeControl(true);
@@ -109,10 +109,10 @@ public class RobotContainer {
 
 	SwerveInputStream driveAngularVelocityKeyboard = SwerveInputStream.of(
 		drivebase.getSwerveDrive(),
-		() -> driverXbox.getLeftY() * sotmTranslationScale(),
-		() -> driverXbox.getLeftX() * sotmTranslationScale()
+		() -> driverXbox.getLeftY() * driveTranslationScale(),
+		() -> driverXbox.getLeftX() * driveTranslationScale()
 	)
-		.withControllerRotationAxis(() -> driverXbox.getRawAxis(2) * sotmRotationScale())
+		.withControllerRotationAxis(() -> driverXbox.getRawAxis(2) * driveRotationScale())
 		.deadband(OperatorConstants.DEADBAND)
 		.scaleTranslation(0.8)
 		.allianceRelativeControl(true);
@@ -141,12 +141,19 @@ public class RobotContainer {
 		return active;
 	}
 
-	private double sotmTranslationScale() {
-		return sotmSlowDriveActive() ? ShotingOnTheFlyConstants.kSlowDriveTranslationScale : 1.0;
+	private boolean trainingModeOn() {
+		return SmartDashboard.getBoolean("Drive/TrainingMode", OperatorConstants.kTrainingModeDefault);
 	}
 
-	private double sotmRotationScale() {
-		return sotmSlowDriveActive() ? ShotingOnTheFlyConstants.kSlowDriveRotationScale : 1.0;
+	/** Driver speed multiplier: SOTM slow drive and training mode stack (multiply). */
+	private double driveTranslationScale() {
+		double scale = sotmSlowDriveActive() ? ShotingOnTheFlyConstants.kSlowDriveTranslationScale : 1.0;
+		return trainingModeOn() ? scale * OperatorConstants.kTrainingTranslationScale : scale;
+	}
+
+	private double driveRotationScale() {
+		double scale = sotmSlowDriveActive() ? ShotingOnTheFlyConstants.kSlowDriveRotationScale : 1.0;
+		return trainingModeOn() ? scale * OperatorConstants.kTrainingRotationScale : scale;
 	}
 
 	/** The container for the robot. Contains subsystems, OI devices, and commands. */
@@ -159,6 +166,7 @@ public class RobotContainer {
 		RegisterAutos();
 		DriverStation.silenceJoystickConnectionWarning(true);
 		SmartDashboard.setDefaultBoolean("SOTM/SlowDriveEnabled", ShotingOnTheFlyConstants.kSlowDriveEnabled);
+		SmartDashboard.setDefaultBoolean("Drive/TrainingMode", OperatorConstants.kTrainingModeDefault);
 		DataLogManager.start();
 
 		// Create the NamedCommands that will be used in PathPlanner

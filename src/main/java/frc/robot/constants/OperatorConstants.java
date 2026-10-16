@@ -19,4 +19,9 @@ public class OperatorConstants {
 	public static final double LEFT_Y_DEADBAND = 0.01;
 	public static final double RIGHT_X_DEADBAND = 0.01;
 	public static final double TURN_CONSTANT = 6;
+
+	// Driver training mode: always drive slower. Toggle live with "Drive/TrainingMode" on the dashboard.
+	public static final boolean kTrainingModeDefault = false;
+	public static final double kTrainingTranslationScale = 0.4;
+	public static final double kTrainingRotationScale = 0.5;
 }
