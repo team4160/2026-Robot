@@ -41,6 +41,13 @@ public class ShootOnTheMoveCommand extends ParallelCommandGroup {
 	private static final double minDistance;
 	private static final double maxDistance;
 
+	// Passing (neutral zone -> our alliance zone) uses its own table
+	private static final InterpolatingDoubleTreeMap passRPMMap = new InterpolatingDoubleTreeMap();
+	private static final InterpolatingDoubleTreeMap passHoodDegMap = new InterpolatingDoubleTreeMap();
+	private static final InterpolatingDoubleTreeMap passTimeOfFlightMap = new InterpolatingDoubleTreeMap();
+	private static final double passMinDistance;
+	private static final double passMaxDistance;
+
 	static {
 		double[][] table = ShotingOnTheFlyConstants.kShotTable;
 		for (double[] row : table) {
@@ -50,6 +57,15 @@ public class ShootOnTheMoveCommand extends ParallelCommandGroup {
 		}
 		minDistance = table[0][0];
 		maxDistance = table[table.length - 1][0];
+
+		double[][] passTable = ShotingOnTheFlyConstants.kPassTable;
+		for (double[] row : passTable) {
+			passRPMMap.put(row[0], row[1]);
+			passHoodDegMap.put(row[0], row[2]);
+			passTimeOfFlightMap.put(row[0], row[3]);
+		}
+		passMinDistance = passTable[0][0];
+		passMaxDistance = passTable[passTable.length - 1][0];
 
 		publishTuningEntries();
 	}
@@ -64,6 +80,7 @@ public class ShootOnTheMoveCommand extends ParallelCommandGroup {
 		SmartDashboard.setDefaultNumber("SOTM/TurretLeadSecs", ShotingOnTheFlyConstants.kTurretLeadSecs);
 		SmartDashboard.setDefaultNumber("SOTM/DragConstant", ShotingOnTheFlyConstants.kLinearDragTimeConstant);
 		SmartDashboard.setDefaultNumber("SOTM/FlywheelOffsetRPM", 0.0);
+		SmartDashboard.setDefaultBoolean("SOTM/PassEnabled", ShotingOnTheFlyConstants.kPassEnabled);
 	}
 
 	private final SwerveSubsystem drivebase;
@@ -77,6 +94,7 @@ public class ShootOnTheMoveCommand extends ParallelCommandGroup {
 	private double flywheelSetpointRPM;
 	private boolean inRange = false;
 	private boolean turretReachable = false;
+	private boolean passing = false; // true = in the neutral zone, lobbing to our alliance zone instead of the hub
 
 	// Turret lead: estimate how fast the aim angle is changing and point a little ahead of it
 	private final LinearFilter turretRateFilter = LinearFilter.movingAverage(5);
@@ -142,7 +160,11 @@ public class ShootOnTheMoveCommand extends ParallelCommandGroup {
 		double turretVx = fieldVel.vxMetersPerSecond - omega * turretOffsetField.getY();
 		double turretVy = fieldVel.vyMetersPerSecond + omega * turretOffsetField.getX();
 
-		Translation2d target = AllianceFlipUtil.apply(FieldConstants.Hub.topCenterPoint.toTranslation2d());
+		passing = shouldPass(robotPose.getTranslation());
+		Translation2d target = passing
+			? passTarget(robotPose.getTranslation())
+			: AllianceFlipUtil.apply(FieldConstants.Hub.topCenterPoint.toTranslation2d());
+		InterpolatingDoubleTreeMap tofMap = passing ? passTimeOfFlightMap : timeOfFlightMap;
 
 		// Solve for the virtual launch point: ball lands where it would from turretPos + v * tof
 		Translation2d virtualPos = turretPos;
@@ -151,7 +173,7 @@ public class ShootOnTheMoveCommand extends ParallelCommandGroup {
 		double dragK = SmartDashboard.getNumber("SOTM/DragConstant", ShotingOnTheFlyConstants.kLinearDragTimeConstant);
 		double effectiveTof = 0;
 		for (int i = 0; i < ShotingOnTheFlyConstants.kLookaheadIterations; i++) {
-			tof = timeOfFlightMap.get(distance);
+			tof = tofMap.get(distance);
 			// Drag: the ball doesn't keep all of the robot's speed for the whole flight (6328's LaunchCalculator)
 			effectiveTof = dragK > 1e-6 ? (1 - Math.exp(-tof * dragK)) / dragK : tof;
 			virtualPos = turretPos.plus(new Translation2d(turretVx * effectiveTof, turretVy * effectiveTof));
@@ -189,10 +211,15 @@ public class ShootOnTheMoveCommand extends ParallelCommandGroup {
 		double leadSecs = SmartDashboard.getNumber("SOTM/TurretLeadSecs", ShotingOnTheFlyConstants.kTurretLeadSecs);
 		turretSetpointDeg = clampToTurretRange(rawDeg + smoothedRate * leadSecs);
 
-		inRange = distance >= minDistance && distance <= maxDistance;
+		inRange = passing
+			? distance >= passMinDistance && distance <= passMaxDistance
+			: distance >= minDistance && distance <= maxDistance;
 		if (SmartDashboard.getBoolean("SOTM/TuningMode", false)) {
 			hoodSetpointDeg = SmartDashboard.getNumber("SOTM/TuningHoodDeg", 23);
 			flywheelSetpointRPM = SmartDashboard.getNumber("SOTM/TuningRPM", 4000);
+		} else if (passing) {
+			hoodSetpointDeg = passHoodDegMap.get(distance);
+			flywheelSetpointRPM = passRPMMap.get(distance);
 		} else {
 			hoodSetpointDeg = hoodDegMap.get(distance);
 			flywheelSetpointRPM =
@@ -213,7 +240,26 @@ public class ShootOnTheMoveCommand extends ParallelCommandGroup {
 		SmartDashboard.putBoolean("SOTM/HoodOnTarget", hoodOnTarget());
 		SmartDashboard.putBoolean("SOTM/FlywheelAtSpeed", flywheelAtSpeed());
 		SmartDashboard.putBoolean("SOTM/Ready", isReady());
+		SmartDashboard.putBoolean("SOTM/Passing", passing);
 		drivebase.getSwerveDrive().field.getObject("SOTM/AimPoint").setPose(new Pose2d(virtualPos, fieldAim));
+		drivebase.getSwerveDrive().field.getObject("SOTM/Target").setPose(new Pose2d(target, Rotation2d.kZero));
+	}
+
+	/** Past our alliance zone line (and passing is on) -> pass. Hysteresis keeps it from flickering on the line. */
+	private boolean shouldPass(Translation2d robotPos) {
+		if (!SmartDashboard.getBoolean("SOTM/PassEnabled", ShotingOnTheFlyConstants.kPassEnabled)) return false;
+		double x = AllianceFlipUtil.applyX(robotPos.getX()); // distance from our alliance wall
+		double line = FieldConstants.LinesVertical.allianceZone + ShotingOnTheFlyConstants.kPassStartOffsetM;
+		double band = ShotingOnTheFlyConstants.kPassHysteresisM;
+		return passing ? x > line - band : x > line + band;
+	}
+
+	/** Pass spot in our alliance zone, on the robot's side of the field. */
+	private static Translation2d passTarget(Translation2d robotPos) {
+		boolean rightSide = AllianceFlipUtil.applyY(robotPos.getY()) < FieldConstants.LinesHorizontal.center;
+		return AllianceFlipUtil.apply(
+			rightSide ? ShotingOnTheFlyConstants.kPassTargetRight : ShotingOnTheFlyConstants.kPassTargetLeft
+		);
 	}
 
 	/** Clamp into the turret's range; if in the dead zone, park at whichever limit is angularly closer. */

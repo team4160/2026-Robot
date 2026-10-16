@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.Meters;
 
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation2d;
 
 public class ShotingOnTheFlyConstants {
 
@@ -75,6 +76,34 @@ public class ShotingOnTheFlyConstants {
 	 * live with "SOTM/TurretLeadSecs" (compare SOTM/TurretAimDeg vs TurretActualDeg), then copy the value here.
 	 */
 	public static final double kTurretLeadSecs = 0.08;
+
+	/**
+	 * Passing: in the neutral zone, lob FUEL back into our alliance zone instead of shooting at the hub. Switches
+	 * automatically by robot position. Toggle live with "SOTM/PassEnabled".
+	 */
+	public static final boolean kPassEnabled = true;
+
+	/** Start passing when the robot center is this far past our alliance zone line (m), about half the robot. */
+	public static final double kPassStartOffsetM = 0.5;
+
+	/** Dead band around that line so the mode doesn't flicker (m). */
+	public static final double kPassHysteresisM = 0.15;
+
+	/** Pass landing spots (blue coordinates, m), behind the bumps so the ball misses the hub. Uses the robot's side. */
+	public static final Translation2d kPassTargetRight = new Translation2d(2.5, 2.5);
+	public static final Translation2d kPassTargetLeft = new Translation2d(2.5, 5.57);
+
+	/**
+	 * Pass table: {distance from turret to pass spot (m), flywheel RPM, hood angle (deg), time of flight (s)}.
+	 *
+	 * <p>GUESSES, not measured. Tune in TuningMode from the neutral zone (read SOTM/Distance), keep rows sorted by
+	 * distance and hood within 1-35 deg.
+	 */
+	public static final double[][] kPassTable = {
+		{ 4.0, 3800, 30.0, 1.3 }, // guess
+		{ 6.0, 4500, 35.0, 1.5 }, // guess
+		{ 8.0, 5200, 35.0, 1.7 }, // guess
+	};
 
 	/**
 	 * Shot table: {distance from turret to hub center (m), flywheel RPM, hood angle (deg), time of flight (s)}.
