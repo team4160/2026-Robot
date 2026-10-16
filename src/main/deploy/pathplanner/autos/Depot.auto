@@ -1,0 +1,82 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "deadline",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Depot Approach"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "intakeDownRun"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "deadline",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Depot In"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "intakeDownRun"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "depotShimmy"
+          }
+        },
+        {
+          "type": "deadline",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Depot To Shoot"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "intakeDownRun"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "autoShootLong"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": "Bump Autos",
+  "choreoAuto": false
+}

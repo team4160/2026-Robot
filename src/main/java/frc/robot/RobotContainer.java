@@ -238,7 +238,19 @@ public class RobotContainer {
 		NamedCommands.registerCommand("jiggle", jiggle());
 
 		// Stopped shot: aim with SOTM, wait until ready (or timeout), then feed + intake roller + jiggle.
-		NamedCommands.registerCommand("autoShoot", autoShoot());
+		NamedCommands.registerCommand("autoShoot", autoShoot(AutoConstants.kFeedSecs));
+		NamedCommands.registerCommand("autoShootLong", autoShoot(AutoConstants.kLongFeedSecs));
+
+		// Depot: strafe side to side while pressing in, intake down and running, for kShimmySecs
+		NamedCommands.registerCommand(
+			"depotShimmy",
+			Commands.deadline(
+				Commands.waitSeconds(AutoConstants.kShimmySecs),
+				shimmy(),
+				intakeArm.setAngle(Degrees.of(AutoConstants.kArmDownDeg)),
+				intake.set(AutoConstants.kIntakeDutyCycle)
+			)
+		);
 	}
 
 	/** Drive forward/back a little (robot relative) so balls settle into the spindexer. Never ends. */
@@ -255,15 +267,29 @@ public class RobotContainer {
 		).finallyDo(() -> drivebase.drive(new ChassisSpeeds()));
 	}
 
-	/** Shoot while stopped in auto. Ends after AutoConstants.kFeedSecs of feeding. */
-	private Command autoShoot() {
+	/** Strafe left/right (robot relative) while pushing forward a little. Never ends. */
+	private Command shimmy() {
+		double push = AutoConstants.kShimmyPushMps;
+		double side = AutoConstants.kShimmySpeedMps;
+		return Commands.repeatingSequence(
+			Commands.run(() -> drivebase.drive(new ChassisSpeeds(push, side, 0)), drivebase).withTimeout(
+				AutoConstants.kShimmyHalfPeriodSecs
+			),
+			Commands.run(() -> drivebase.drive(new ChassisSpeeds(push, -side, 0)), drivebase).withTimeout(
+				AutoConstants.kShimmyHalfPeriodSecs
+			)
+		).finallyDo(() -> drivebase.drive(new ChassisSpeeds()));
+	}
+
+	/** Shoot while stopped in auto. Ends after feedSecs of feeding. */
+	private Command autoShoot(double feedSecs) {
 		ShootOnTheMoveCommand aim = new ShootOnTheMoveCommand(drivebase, turret, hood, shooter);
 		Command feed = Commands.parallel(
 			spindexer.set(AutoConstants.kSpindexerFeedDutyCycle),
 			kicker.set(AutoConstants.kKickerFeedDutyCycle),
 			intake.set(AutoConstants.kIntakeDutyCycle), // keep pushing balls up into the spindexer
 			jiggle()
-		).withTimeout(AutoConstants.kFeedSecs);
+		).withTimeout(feedSecs);
 		return Commands.deadline(
 			Commands.waitUntil(aim::isReady).withTimeout(AutoConstants.kReadyTimeoutSecs).andThen(feed),
 			aim
@@ -380,6 +406,18 @@ public class RobotContainer {
 
 		operatorXbox.pov(270).whileTrue(turret.set(0.15));
 		operatorXbox.pov(90).whileTrue(turret.set(-0.15));
+
+		// Flywheel nudge for SOTM table shots: D-pad up = +RPM (shots short), down = -RPM (shots long)
+		operatorXbox
+			.pov(0)
+			.onTrue(
+				Commands.runOnce(() -> ShootOnTheMoveCommand.nudgeFlywheel(ShotingOnTheFlyConstants.kFlywheelNudgeRPM))
+			);
+		operatorXbox
+			.pov(180)
+			.onTrue(
+				Commands.runOnce(() -> ShootOnTheMoveCommand.nudgeFlywheel(-ShotingOnTheFlyConstants.kFlywheelNudgeRPM))
+			);
 	}
 
 	/**

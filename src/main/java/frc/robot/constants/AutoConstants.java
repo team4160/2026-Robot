@@ -18,6 +18,15 @@ public class AutoConstants {
 	/** How long to feed when shooting in auto. TODO: time how long it takes to empty the robot. */
 	public static final double kFeedSecs = 2.5;
 
+	/** Depot auto: feed this long (robot has preload + up to 24 depot balls, and time to spare). */
+	public static final double kLongFeedSecs = 7.0;
+
+	// Depot shimmy: strafe left/right (robot relative) so the intake covers the whole 42 in wide DEPOT
+	public static final double kShimmySpeedMps = 0.5;
+	public static final double kShimmyHalfPeriodSecs = 0.35;
+	public static final double kShimmyPushMps = 0.15; // keep pressing gently into the depot
+	public static final double kShimmySecs = 1.5;
+
 	/** Max time to wait for SOTM to be ready before feeding anyway. */
 	public static final double kReadyTimeoutSecs = 1.5;
 

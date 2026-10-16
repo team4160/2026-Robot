@@ -44,6 +44,16 @@ public class ShotingOnTheFlyConstants {
 	/** How far ahead to predict the robot pose to cover sensor/control latency (seconds). */
 	public static final double kPhaseDelaySecs = 0.03;
 
+	/**
+	 * Air drag on the lead (from 6328's LaunchCalculator): the ball loses the robot's speed in flight, so we lead with
+	 * effectiveTOF = (1 - e^(-tof * k)) / k instead of the real time of flight. 0.375 is 6328's value. 0 = off.
+	 * Live-tune with "SOTM/DragConstant": moving shots land AHEAD of travel -> lower it, BEHIND -> raise it.
+	 */
+	public static final double kLinearDragTimeConstant = 0.375;
+
+	/** Operator D-pad up/down nudges the flywheel by this much (RPM). Total shown as "SOTM/FlywheelOffsetRPM". */
+	public static final double kFlywheelNudgeRPM = 50.0;
+
 	/** Fixed-point iterations used to solve for time of flight while moving. */
 	public static final int kLookaheadIterations = 10;
 
