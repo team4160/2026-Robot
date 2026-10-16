@@ -100,6 +100,7 @@ public class ShootOnTheMoveCommand extends ParallelCommandGroup {
 	private final LinearFilter turretRateFilter = LinearFilter.movingAverage(5);
 	private double lastAimDeg = Double.NaN;
 	private double aimDeg; // where the turret should point right now, before lead
+	private double turretToleranceDeg = ShotingOnTheFlyConstants.kTurretToleranceMinDeg; // set by distance each loop
 
 	// isScheduled() is false when this runs inside an auto group, so track "running" by when we last calculated
 	private double lastCalculateTime = Double.NEGATIVE_INFINITY;
@@ -226,7 +227,10 @@ public class ShootOnTheMoveCommand extends ParallelCommandGroup {
 				flywheelRPMMap.get(distance) + SmartDashboard.getNumber("SOTM/FlywheelOffsetRPM", 0.0);
 		}
 
+		turretToleranceDeg = turretToleranceDeg(distance, passing);
+
 		SmartDashboard.putNumber("SOTM/Distance", distance);
+		SmartDashboard.putNumber("SOTM/TurretToleranceDeg", turretToleranceDeg);
 		SmartDashboard.putNumber("SOTM/TimeOfFlight", tof);
 		SmartDashboard.putNumber("SOTM/EffectiveTOF", effectiveTof);
 		SmartDashboard.putNumber("SOTM/TurretSetpointDeg", turretSetpointDeg);
@@ -280,7 +284,17 @@ public class ShootOnTheMoveCommand extends ParallelCommandGroup {
 
 	/** Compared against the real aim angle, not the led setpoint, so the lead doesn't block Ready. */
 	private boolean turretOnTarget() {
-		return Math.abs(turret.getRawAngle().in(Degrees) - aimDeg) < ShotingOnTheFlyConstants.kTurretToleranceDeg;
+		return Math.abs(turret.getRawAngle().in(Degrees) - aimDeg) < turretToleranceDeg;
+	}
+
+	/** Allowed turret error (deg) so the ball still lands within the aim radius of the target at this distance. */
+	private static double turretToleranceDeg(double distance, boolean passing) {
+		double radius = passing ? ShotingOnTheFlyConstants.kPassAimRadiusM : ShotingOnTheFlyConstants.kHubAimRadiusM;
+		return MathUtil.clamp(
+			Math.toDegrees(Math.atan2(radius, distance)),
+			ShotingOnTheFlyConstants.kTurretToleranceMinDeg,
+			ShotingOnTheFlyConstants.kTurretToleranceMaxDeg
+		);
 	}
 
 	private boolean hoodOnTarget() {

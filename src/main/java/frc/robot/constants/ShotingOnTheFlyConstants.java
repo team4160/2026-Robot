@@ -67,7 +67,16 @@ public class ShotingOnTheFlyConstants {
 	public static final double kSlowDriveRotationScale = 0.6;
 
 	// Readiness tolerances
-	public static final double kTurretToleranceDeg = 5.0;
+	/**
+	 * Turret is on target if the ball would still land within this many meters of the target center sideways, so the
+	 * allowed angle = atan(radius / distance): looser up close, tighter far away. Hub opening is ~0.53 m radius; 0.35
+	 * leaves room for the ball and other errors. Passing lands on the floor, so it can be much looser.
+	 */
+	public static final double kHubAimRadiusM = 0.35;
+	public static final double kPassAimRadiusM = 1.0;
+	/** Limits on that angle (deg) so it never gets silly at very short or very long range. */
+	public static final double kTurretToleranceMinDeg = 3.0;
+	public static final double kTurretToleranceMaxDeg = 10.0;
 	public static final double kHoodToleranceDeg = 2.5;
 	public static final double kShooterToleranceRPM = 250.0;
 
