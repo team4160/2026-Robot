@@ -11,6 +11,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
@@ -80,6 +81,9 @@ public class ShootOnTheMoveCommand extends ParallelCommandGroup {
 	private double lastAimDeg = Double.NaN;
 	private double aimDeg; // where the turret should point right now, before lead
 
+	// isScheduled() is false when this runs inside an auto group, so track "running" by when we last calculated
+	private double lastCalculateTime = Double.NEGATIVE_INFINITY;
+
 	public ShootOnTheMoveCommand(
 		SwerveSubsystem drivebase,
 		TurretSubsystem turret,
@@ -108,6 +112,7 @@ public class ShootOnTheMoveCommand extends ParallelCommandGroup {
 	}
 
 	private void calculate() {
+		lastCalculateTime = Timer.getFPGATimestamp();
 		// Predict where the robot will be after the control latency
 		ChassisSpeeds robotRelative = drivebase.getRobotVelocity();
 		double dt = ShotingOnTheFlyConstants.kPhaseDelaySecs;
@@ -235,9 +240,14 @@ public class ShootOnTheMoveCommand extends ParallelCommandGroup {
 		);
 	}
 
+	/** True if the solver ran in the last 0.1 s, whether scheduled alone or inside a group. */
+	private boolean isRunning() {
+		return Timer.getFPGATimestamp() - lastCalculateTime < 0.1;
+	}
+
 	/** True when a valid solution exists and every mechanism is close enough to fire. */
 	public boolean isReady() {
-		return isScheduled() && inRange && turretReachable && turretOnTarget() && hoodOnTarget() && flywheelAtSpeed();
+		return isRunning() && inRange && turretReachable && turretOnTarget() && hoodOnTarget() && flywheelAtSpeed();
 	}
 
 	public Trigger readyTrigger() {

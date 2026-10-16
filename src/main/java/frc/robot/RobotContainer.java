@@ -14,6 +14,7 @@ import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DataLogManager;
@@ -28,6 +29,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.ShootOnTheMoveCommand;
+import frc.robot.constants.AutoConstants;
 import frc.robot.constants.OperatorConstants;
 import frc.robot.constants.ShotingOnTheFlyConstants;
 import frc.robot.subsystems.HoodSubsystem;
@@ -204,15 +206,67 @@ public class RobotContainer {
 		// Aim only (put in parallel with a path; ends when the path/group ends)
 		NamedCommands.registerCommand("aimOnMove", new ShootOnTheMoveCommand(drivebase, turret, hood, shooter));
 
-		// Aim while moving, feed once ready (or after 1.5s), feed for 2s, then stop
+		// Aim while moving, feed once ready (or after 1.5s), feed for 2s, then stop.
+		// The feed sequence is the deadline; SOTM by itself never ends.
 		ShootOnTheMoveCommand autoSotm = new ShootOnTheMoveCommand(drivebase, turret, hood, shooter);
 		NamedCommands.registerCommand(
 			"shootOnMove",
-			autoSotm.deadlineFor(
+			Commands.deadline(
 				Commands.waitUntil(autoSotm::isReady)
 					.withTimeout(1.5)
-					.andThen(spindexer.set(0.65).alongWith(kicker.set(-1)).withTimeout(2))
+					.andThen(spindexer.set(0.65).alongWith(kicker.set(-1)).withTimeout(2)),
+				autoSotm
 			)
+		);
+
+		// Intake arm down + roller on. Never ends: use in a deadline/race with a path.
+		NamedCommands.registerCommand(
+			"intakeDownRun",
+			intakeArm
+				.setAngle(Degrees.of(AutoConstants.kArmDownDeg))
+				.alongWith(intake.set(AutoConstants.kIntakeDutyCycle))
+		);
+
+		// Intake arm up. Not used in autos yet: the arm can't lift right now. Ends when up (or after a timeout).
+		NamedCommands.registerCommand(
+			"intakeUp",
+			intakeArm
+				.runToAngle(Degrees.of(AutoConstants.kArmUpDeg), Degrees.of(AutoConstants.kArmToleranceDeg))
+				.withTimeout(AutoConstants.kArmMoveTimeoutSecs)
+		);
+
+		NamedCommands.registerCommand("jiggle", jiggle());
+
+		// Stopped shot: aim with SOTM, wait until ready (or timeout), then feed + intake roller + jiggle.
+		NamedCommands.registerCommand("autoShoot", autoShoot());
+	}
+
+	/** Drive forward/back a little (robot relative) so balls settle into the spindexer. Never ends. */
+	private Command jiggle() {
+		return Commands.repeatingSequence(
+			Commands.run(
+				() -> drivebase.drive(new ChassisSpeeds(AutoConstants.kJiggleSpeedMps, 0, 0)),
+				drivebase
+			).withTimeout(AutoConstants.kJiggleHalfPeriodSecs),
+			Commands.run(
+				() -> drivebase.drive(new ChassisSpeeds(-AutoConstants.kJiggleSpeedMps, 0, 0)),
+				drivebase
+			).withTimeout(AutoConstants.kJiggleHalfPeriodSecs)
+		).finallyDo(() -> drivebase.drive(new ChassisSpeeds()));
+	}
+
+	/** Shoot while stopped in auto. Ends after AutoConstants.kFeedSecs of feeding. */
+	private Command autoShoot() {
+		ShootOnTheMoveCommand aim = new ShootOnTheMoveCommand(drivebase, turret, hood, shooter);
+		Command feed = Commands.parallel(
+			spindexer.set(AutoConstants.kSpindexerFeedDutyCycle),
+			kicker.set(AutoConstants.kKickerFeedDutyCycle),
+			intake.set(AutoConstants.kIntakeDutyCycle), // keep pushing balls up into the spindexer
+			jiggle()
+		).withTimeout(AutoConstants.kFeedSecs);
+		return Commands.deadline(
+			Commands.waitUntil(aim::isReady).withTimeout(AutoConstants.kReadyTimeoutSecs).andThen(feed),
+			aim
 		);
 	}
 
