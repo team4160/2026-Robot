@@ -19,7 +19,10 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.util.datalog.StringLogEntry;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog.State;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -121,12 +124,27 @@ public class TurretSubsystem extends SubsystemBase {
 		BooleanSupplier atMax = () -> getRawAngle().in(Degrees) >= kSysIdMaxDeg;
 		BooleanSupplier atMin = () -> getRawAngle().in(Degrees) <= kSysIdMinDeg;
 		return Commands.runOnce(motor::stopClosedLoopController)
-			.andThen(routine.dynamic(Direction.kForward).until(atMax))
-			.andThen(routine.dynamic(Direction.kReverse).until(atMin))
-			.andThen(routine.quasistatic(Direction.kForward).until(atMax))
-			.andThen(routine.quasistatic(Direction.kReverse).until(atMin))
+			.andThen(sysIdTest(routine.dynamic(Direction.kForward).until(atMax), State.kDynamicForward))
+			.andThen(sysIdTest(routine.dynamic(Direction.kReverse).until(atMin), State.kDynamicReverse))
+			.andThen(sysIdTest(routine.quasistatic(Direction.kForward).until(atMax), State.kQuasistaticForward))
+			.andThen(sysIdTest(routine.quasistatic(Direction.kReverse).until(atMin), State.kQuasistaticReverse))
 			.finallyDo(motor::startClosedLoopController)
 			.withName("Turret SysId");
+	}
+
+	// YAMS writes the SysId test state to the CTRE .hoot log, but position/velocity/voltage go to the .wpilog.
+	// The SysId tool needs all of them in one file, so also write the state to the .wpilog.
+	private StringLogEntry sysIdStateLog;
+
+	private Command sysIdTest(Command test, State state) {
+		return test.beforeStarting(() -> logSysIdState(state)).finallyDo(() -> logSysIdState(State.kNone));
+	}
+
+	private void logSysIdState(State state) {
+		if (sysIdStateLog == null) {
+			sysIdStateLog = new StringLogEntry(DataLogManager.getLog(), "sysid-test-state-" + getName());
+		}
+		sysIdStateLog.append(state.toString());
 	}
 
 	/**
