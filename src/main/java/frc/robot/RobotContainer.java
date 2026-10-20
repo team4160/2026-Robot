@@ -407,6 +407,9 @@ public class RobotContainer {
 		operatorXbox.pov(270).whileTrue(turret.set(0.15));
 		operatorXbox.pov(90).whileTrue(turret.set(-0.15));
 
+		// Turret SysId (kS/kV): HOLD operator Back to run all 4 tests, let go to stop. Start the turret near one end.
+		operatorXbox.back().whileTrue(turret.sysId());
+
 		// Flywheel nudge for SOTM table shots: D-pad up = +RPM (shots short), down = -RPM (shots long)
 		operatorXbox
 			.pov(0)

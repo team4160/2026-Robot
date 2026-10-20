@@ -21,9 +21,13 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.constants.GenericConstants;
 import frc.robot.constants.TurretConstants;
+import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 import yams.gearing.GearBox;
 import yams.gearing.MechanismGearing;
@@ -99,12 +103,30 @@ public class TurretSubsystem extends SubsystemBase {
 		turret = new Pivot(pivotConfig);
 	}
 
+	/** SysId stops this far inside the soft limits (deg), because the wires are tight at the real limits. */
+	private static final double kSysIdMinDeg = -60.0;
+	private static final double kSysIdMaxDeg = 90.0;
+
+	/**
+	 * Same 4 tests as YAMS' Pivot.sysId (dynamic +, dynamic -, quasistatic +, quasistatic -), but each one stops at
+	 * kSysIdMinDeg/kSysIdMaxDeg instead of 1 deg from the soft limits. "+" = turret angle going up. Start near
+	 * kSysIdMinDeg. Data goes to the robot's .wpilog (DataLogManager).
+	 */
 	public Command sysId() {
-		return turret.sysId(
-			Volts.of(4.0), // maximumVoltage
-			Volts.per(Second).of(0.5), // step
-			Seconds.of(8.0) // duration
+		SysIdRoutine routine = motor.sysId(
+			Volts.of(1.5), // dynamic step voltage (gentle, about 75 deg/s)
+			Volts.per(Second).of(0.3), // quasistatic ramp
+			Seconds.of(4.0) // max time per test
 		);
+		BooleanSupplier atMax = () -> getRawAngle().in(Degrees) >= kSysIdMaxDeg;
+		BooleanSupplier atMin = () -> getRawAngle().in(Degrees) <= kSysIdMinDeg;
+		return Commands.runOnce(motor::stopClosedLoopController)
+			.andThen(routine.dynamic(Direction.kForward).until(atMax))
+			.andThen(routine.dynamic(Direction.kReverse).until(atMin))
+			.andThen(routine.quasistatic(Direction.kForward).until(atMax))
+			.andThen(routine.quasistatic(Direction.kReverse).until(atMin))
+			.finallyDo(motor::startClosedLoopController)
+			.withName("Turret SysId");
 	}
 
 	/**
