@@ -105,13 +105,20 @@ public class ShotingOnTheFlyConstants {
 	/**
 	 * Pass table: {distance from turret to pass spot (m), flywheel RPM, hood angle (deg), time of flight (s)}.
 	 *
-	 * <p>GUESSES, not measured. Tune in TuningMode from the neutral zone (read SOTM/Distance), keep rows sorted by
-	 * distance and hood within 1-35 deg.
+	 * <p>ESTIMATED from the measured shot table (2026-10-19), not measured. Fit from the 10-15 hub shots: ball speed
+	 * ~1.765 m/s per 1000 RPM, launch angle ~ 77.6 - 0.56 * hood (deg), exit ~0.55 m high. Solved for landing on the
+	 * floor at the pass spot with hood 30 (~61 deg launch; hood only measured 20-25, so the angle is extrapolated),
+	 * +1% RPM per meter past 4 m for drag. Tune in TuningMode from the neutral zone (read SOTM/Distance); if passes
+	 * land short/long at every distance, nudge all RPMs together. Keep rows sorted and hood within 1-35 deg.
 	 */
 	public static final double[][] kPassTable = {
-		{ 4.0, 3800, 30.0, 1.3 }, // guess
-		{ 6.0, 4500, 35.0, 1.5 }, // guess
-		{ 8.0, 5200, 35.0, 1.7 }, // guess
+		{ 2.0, 2550, 30.0, 0.92 }, // estimate
+		{ 2.5, 2850, 30.0, 1.01 }, // estimate
+		{ 3.0, 3150, 30.0, 1.10 }, // estimate
+		{ 4.0, 3700, 30.0, 1.25 }, // estimate
+		{ 5.0, 4200, 30.0, 1.39 }, // estimate
+		{ 6.0, 4700, 30.0, 1.52 }, // estimate
+		{ 7.0, 5150, 30.0, 1.63 }, // estimate
 	};
 
 	/**
