@@ -15,6 +15,7 @@ import static edu.wpi.first.units.Units.Volts;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Angle;
@@ -70,7 +71,7 @@ public class TurretSubsystem extends SubsystemBase {
 			.withSoftLimit(Degrees.of(-80), Degrees.of(111))
 			.withClosedLoopController(69, 6.9, 0, DegreesPerSecond.of(900), DegreesPerSecondPerSecond.of(1800)) // was 5000/2000, whipped the CAN wires; 900 still beats the robot max spin (~760 deg/s)
 			// .withSimClosedLoopController(130, 0, 3.4, DegreesPerSecond.of(1000), DegreesPerSecondPerSecond.of(1500))
-			// .withFeedforward(new SimpleMotorFeedforward(0.18, 4.0, 0.11307))
+			.withFeedforward(new SimpleMotorFeedforward(0.17878, 4.7203, 0.75145)) // SysId 2026-10-20 (Simple, turret rotations): kS V, kV V/(rot/s), kA V/(rot/s^2)
 			.withGearing(new MechanismGearing(GearBox.fromStages("5:1", "200:20")))
 			.withIdleMode(MotorMode.BRAKE)
 			.withTelemetry("TurretMotorV2", GenericConstants.kTelemetryVerbosity)
