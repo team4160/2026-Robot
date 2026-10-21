@@ -63,8 +63,16 @@ public class ShotingOnTheFlyConstants {
 	 * "SOTM/SlowDriveEnabled" on the dashboard.
 	 */
 	public static final boolean kSlowDriveEnabled = true;
-	public static final double kSlowDriveTranslationScale = 0.5;
-	public static final double kSlowDriveRotationScale = 0.6;
+	public static final double kSlowDriveTranslationScale = 0.3; // was 0.5
+	public static final double kSlowDriveRotationScale = 0.4; // was 0.6
+
+	/**
+	 * Lock the wheels in an X while feeding during SOTM and the driver isn't moving the sticks, so defense can't push
+	 * the robot off the shot (6328 does the same with an "O-lock"). Moving a stick releases it. Toggle live with
+	 * "SOTM/XLockEnabled".
+	 */
+	public static final boolean kXLockEnabled = false; // off by default: our robot feeds better when it can move a little
+	public static final double kXLockStickDeadband = 0.1;
 
 	// Readiness tolerances
 	/**
@@ -127,13 +135,12 @@ public class ShotingOnTheFlyConstants {
 	 * <p>Measured standing still in tuning mode. Time of flight = 240 fps slow-mo playback time (Premiere sec:frames,
 	 * 30 fps, or iPhone Photos seconds) / 8, ball leaves shooter -> drops through hub top. Whole flight must be inside the slow part.
 	 * Distances from the left side of the field may be off (vision was less accurate there). Keep rows sorted by
-	 * distance and hood within 1-35 deg. Range is 2.0-4.81 m; outside that SOTM/InRange is false.
+	 * distance and hood within 1-35 deg. Range is 1.58-4.81 m; outside that SOTM/InRange is false.
 	 */
 	public static final double[][] kShotTable = {
-		{ 2.00, 3200, 5.0, 1.01 }, // 10-08, OLD (before camera fix), re-tune
-		{ 2.33, 3600, 10.0, 1.17 }, // 10-08, OLD (before camera fix), re-tune
-		{ 2.87, 3500, 15.0, 1.03 }, // 10-08, OLD (before camera fix), re-tune
-		{ 3.05, 3670, 20.0, 1.06 }, // 10-15
+		{ 1.58, 3400, 9.0, 0.99 }, // 10-20 (no data 1.58-3.05 yet: add a row near 2.3 m)
+		{ 3.05, 3635, 19.5, 1.055 }, // avg of 10-15 (3670/20/1.06) and 10-20 (3600/19/1.05)
+		{ 3.28, 3800, 20.0, 1.10 }, // 10-20
 		{ 3.39, 4000, 23.0, 1.11 }, // 10-15
 		{ 3.84, 4500, 24.0, 1.21 }, // 10-15
 		{ 4.56, 4700, 24.0, 1.28 }, // 10-15

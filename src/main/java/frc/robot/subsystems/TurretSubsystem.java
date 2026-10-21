@@ -69,9 +69,13 @@ public class TurretSubsystem extends SubsystemBase {
 
 		motorConfig = new SmartMotorControllerConfig(this)
 			.withSoftLimit(Degrees.of(-80), Degrees.of(111))
-			.withClosedLoopController(69, 6.9, 0, DegreesPerSecond.of(900), DegreesPerSecondPerSecond.of(1800)) // was 5000/2000, whipped the CAN wires; 900 still beats the robot max spin (~760 deg/s)
+			// kI 6.9 -> 0 with feedforward on (FF covers friction/speed; kI only winds up). was 5000/2000 deg/s, whipped the CAN wires; 900 still beats the robot max spin (~760 deg/s)
+			.withClosedLoopController(69, 0, 0, DegreesPerSecond.of(900), DegreesPerSecondPerSecond.of(1800))
 			// .withSimClosedLoopController(130, 0, 3.4, DegreesPerSecond.of(1000), DegreesPerSecondPerSecond.of(1500))
-			.withFeedforward(new SimpleMotorFeedforward(0.17878, 4.7203, 0.75145)) // SysId 2026-10-20 (Simple, turret rotations): kS V, kV V/(rot/s), kA V/(rot/s^2)
+			// SysId 2026-10-20 (Simple, turret rotations): kS 0.17878 V, kV 4.7203 V/(rot/s), kA 0.75145 V/(rot/s^2).
+			// kA set to 0: Motion Magic's planned accel jumps +-1800 deg/s^2, so kA made ~3.8 V steps = jitter.
+			// If it jitters again: comment this line out and set kI back to 6.9.
+			.withFeedforward(new SimpleMotorFeedforward(0.17878, 4.7203, 0.0))
 			.withGearing(new MechanismGearing(GearBox.fromStages("5:1", "200:20")))
 			.withIdleMode(MotorMode.BRAKE)
 			.withTelemetry("TurretMotorV2", GenericConstants.kTelemetryVerbosity)

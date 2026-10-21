@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.GenericConstants;
 import frc.robot.constants.HopperConstants;
+import java.util.function.Supplier;
 import yams.gearing.GearBox;
 import yams.gearing.MechanismGearing;
 import yams.mechanisms.config.FlyWheelConfig;
@@ -95,6 +96,10 @@ public class SpindexerSubsystem extends SubsystemBase {
 	 * @return {@link edu.wpi.first.wpilibj2.command.RunCommand}
 	 */
 	public Command set(double dutyCycle) {
+		return shooter.set(dutyCycle);
+	}
+
+	public Command set(Supplier<Double> dutyCycle) {
 		return shooter.set(dutyCycle);
 	}
 
