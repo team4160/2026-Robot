@@ -117,6 +117,14 @@ public class IntakeArmSubsystem extends SubsystemBase {
 		return arm.set(dutycycle);
 	}
 
+	/**
+	 * Stop pushing and let the arm rest (brake mode). Holding "down" with PID + gravity feedforward lifts the arm a
+	 * little and twists it, so autos drop it, then relax it.
+	 */
+	public void relax() {
+		this.SmartMotorController.setDutyCycle(0);
+	}
+
 	/** Run sysId on the {@link Arm} */
 	public Command sysId() {
 		return arm.sysId(Volts.of(5), Volts.of(1).per(Second), Seconds.of(8));

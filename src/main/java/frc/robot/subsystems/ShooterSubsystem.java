@@ -150,6 +150,11 @@ public class ShooterSubsystem extends SubsystemBase {
 		return shooter.set(dutyCycle);
 	}
 
+	/** Stop the motor now. A finished YAMS set() command leaves its last output running, so autos call this. */
+	public void stopNow() {
+		shooterLeaderMotor.setDutyCycle(0);
+	}
+
 	public Command sysId() {
 		return shooter.sysId(
 			Volts.of(10.0), // maximumVoltage

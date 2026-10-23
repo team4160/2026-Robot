@@ -99,6 +99,11 @@ public class SpindexerSubsystem extends SubsystemBase {
 		return shooter.set(dutyCycle);
 	}
 
+	/** Stop the motor now. A finished YAMS set() command leaves its last output running, so autos call this. */
+	public void stopNow() {
+		motor.setDutyCycle(0);
+	}
+
 	public Command set(Supplier<Double> dutyCycle) {
 		return shooter.set(dutyCycle);
 	}

@@ -79,7 +79,9 @@ public class ShootOnTheMoveCommand extends ParallelCommandGroup {
 		SmartDashboard.setDefaultBoolean("SOTM/TurretFlipped", ShotingOnTheFlyConstants.kTurretFlipped);
 		SmartDashboard.setDefaultNumber("SOTM/TurretLeadSecs", ShotingOnTheFlyConstants.kTurretLeadSecs);
 		SmartDashboard.setDefaultNumber("SOTM/DragConstant", ShotingOnTheFlyConstants.kLinearDragTimeConstant);
-		SmartDashboard.setDefaultNumber("SOTM/FlywheelOffsetRPM", 0.0);
+		SmartDashboard.setDefaultNumber("SOTM/FlywheelOffsetRPM", ShotingOnTheFlyConstants.kFlywheelOffsetRPM);
+		SmartDashboard.setDefaultNumber("SOTM/HoodOffsetDeg", ShotingOnTheFlyConstants.kHoodOffsetDeg);
+		SmartDashboard.setDefaultNumber("SOTM/TofScale", ShotingOnTheFlyConstants.kTofScale);
 		SmartDashboard.setDefaultBoolean("SOTM/PassEnabled", ShotingOnTheFlyConstants.kPassEnabled);
 	}
 
@@ -172,9 +174,10 @@ public class ShootOnTheMoveCommand extends ParallelCommandGroup {
 		double distance = target.getDistance(turretPos);
 		double tof = 0;
 		double dragK = SmartDashboard.getNumber("SOTM/DragConstant", ShotingOnTheFlyConstants.kLinearDragTimeConstant);
+		double tofScale = SmartDashboard.getNumber("SOTM/TofScale", ShotingOnTheFlyConstants.kTofScale);
 		double effectiveTof = 0;
 		for (int i = 0; i < ShotingOnTheFlyConstants.kLookaheadIterations; i++) {
-			tof = tofMap.get(distance);
+			tof = tofMap.get(distance) * tofScale;
 			// Drag: the ball doesn't keep all of the robot's speed for the whole flight (6328's LaunchCalculator)
 			effectiveTof = dragK > 1e-6 ? (1 - Math.exp(-tof * dragK)) / dragK : tof;
 			virtualPos = turretPos.plus(new Translation2d(turretVx * effectiveTof, turretVy * effectiveTof));
@@ -222,9 +225,15 @@ public class ShootOnTheMoveCommand extends ParallelCommandGroup {
 			hoodSetpointDeg = passHoodDegMap.get(distance);
 			flywheelSetpointRPM = passRPMMap.get(distance);
 		} else {
-			hoodSetpointDeg = hoodDegMap.get(distance);
+			hoodSetpointDeg = MathUtil.clamp(
+				hoodDegMap.get(distance) +
+				SmartDashboard.getNumber("SOTM/HoodOffsetDeg", ShotingOnTheFlyConstants.kHoodOffsetDeg),
+				1.0,
+				35.0
+			);
 			flywheelSetpointRPM =
-				flywheelRPMMap.get(distance) + SmartDashboard.getNumber("SOTM/FlywheelOffsetRPM", 0.0);
+				flywheelRPMMap.get(distance) +
+				SmartDashboard.getNumber("SOTM/FlywheelOffsetRPM", ShotingOnTheFlyConstants.kFlywheelOffsetRPM);
 		}
 
 		turretToleranceDeg = turretToleranceDeg(distance, passing);
@@ -323,7 +332,7 @@ public class ShootOnTheMoveCommand extends ParallelCommandGroup {
 		publishTuningEntries();
 		SmartDashboard.putNumber(
 			"SOTM/FlywheelOffsetRPM",
-			SmartDashboard.getNumber("SOTM/FlywheelOffsetRPM", 0.0) + rpm
+			SmartDashboard.getNumber("SOTM/FlywheelOffsetRPM", ShotingOnTheFlyConstants.kFlywheelOffsetRPM) + rpm
 		);
 	}
 

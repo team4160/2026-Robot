@@ -55,6 +55,25 @@ public class ShotingOnTheFlyConstants {
 	/** Operator D-pad up/down nudges the flywheel by this much (RPM). Total shown as "SOTM/FlywheelOffsetRPM". */
 	public static final double kFlywheelNudgeRPM = 50.0;
 
+	// ===== QUICK COMP TUNING =====
+	// Change these between matches (redeploy), or live on the dashboard (live values reset to these on reboot).
+	// Change ONE at a time, in small steps. Other live knobs: SOTM/TurretTrimDeg (neg = aim left), SOTM/DragConstant.
+
+	/** Hub shots: added to the table RPM. Shots SHORT -> raise (+50), LONG -> lower. Live: SOTM/FlywheelOffsetRPM. */
+	public static final double kFlywheelOffsetRPM = 0.0;
+
+	/**
+	 * Hub shots: added to the table hood angle (deg). Our table's hood goes up with distance, so shots SHORT -> +1,
+	 * LONG -> -1. Try RPM first. Live: SOTM/HoodOffsetDeg.
+	 */
+	public static final double kHoodOffsetDeg = 0.0;
+
+	/**
+	 * Multiplies every table time of flight (only matters while MOVING). Moving shots land AHEAD of where the robot is
+	 * driving -> raise (1.05), BEHIND -> lower (0.95). Live: SOTM/TofScale.
+	 */
+	public static final double kTofScale = 1.0;
+
 	/** Fixed-point iterations used to solve for time of flight while moving. */
 	public static final int kLookaheadIterations = 10;
 

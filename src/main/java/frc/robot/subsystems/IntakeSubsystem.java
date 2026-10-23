@@ -98,6 +98,11 @@ public class IntakeSubsystem extends SubsystemBase {
 		return IntakeWheel.set(dutyCycle);
 	}
 
+	/** Stop the motor now. A finished YAMS set() command leaves its last output running, so autos call this. */
+	public void stopNow() {
+		IntakeMotor.setDutyCycle(0);
+	}
+
 	/** Creates a new ExampleSubsystem. */
 	public IntakeSubsystem() {}
 

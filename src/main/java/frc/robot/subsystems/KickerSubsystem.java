@@ -102,6 +102,11 @@ public class KickerSubsystem extends SubsystemBase {
 		return kicker.set(dutyCycle);
 	}
 
+	/** Stop the motor now. A finished YAMS set() command leaves its last output running, so autos call this. */
+	public void stopNow() {
+		motor.setDutyCycle(0);
+	}
+
 	public Command sysId() {
 		return kicker.sysId(
 			Volts.of(10.0), // maximumVoltage

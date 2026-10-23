@@ -30,7 +30,15 @@ public class AutoConstants {
 	/** Max time to wait for SOTM to be ready before feeding anyway. */
 	public static final double kReadyTimeoutSecs = 1.5;
 
-	// Jiggle: drive forward/back a little while feeding so balls settle into the spindexer
-	public static final double kJiggleSpeedMps = 0.6;
-	public static final double kJiggleHalfPeriodSecs = 0.15;
+	/**
+	 * Jiggle while feeding in auto: every kJigglePauseSecs, one quick bump forward then back so balls settle into the
+	 * spindexer. Was nonstop at 0.6 m/s and shook the turret off target. Turn off with kJiggleWhileShooting = false.
+	 */
+	public static final boolean kJiggleWhileShooting = true;
+	public static final double kJiggleSpeedMps = 0.4; // was 0.6
+	public static final double kJiggleHalfPeriodSecs = 0.1; // each bump lasts this long (was 0.15)
+	public static final double kJigglePauseSecs = 1.0; // sit still this long between bumps
+
+	/** intakeDownRun: drive the arm down for at most this long, then let it rest instead of holding (holding lifted it). */
+	public static final double kArmDropSecs = 1.0;
 }

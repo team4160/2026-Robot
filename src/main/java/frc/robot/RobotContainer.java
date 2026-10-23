@@ -219,16 +219,11 @@ public class RobotContainer {
 					.withTimeout(1.5)
 					.andThen(spindexer.set(0.65).alongWith(kicker.set(-1)).withTimeout(2)),
 				autoSotm
-			)
+			).finallyDo(this::stopShooting)
 		);
 
 		// Intake arm down + roller on. Never ends: use in a deadline/race with a path.
-		NamedCommands.registerCommand(
-			"intakeDownRun",
-			intakeArm
-				.setAngle(Degrees.of(AutoConstants.kArmDownDeg))
-				.alongWith(intake.set(AutoConstants.kIntakeDutyCycle))
-		);
+		NamedCommands.registerCommand("intakeDownRun", intakeDownRun());
 
 		// Intake arm up. Not used in autos yet: the arm can't lift right now. Ends when up (or after a timeout).
 		NamedCommands.registerCommand(
@@ -247,18 +242,17 @@ public class RobotContainer {
 		// Depot: strafe side to side while pressing in, intake down and running, for kShimmySecs
 		NamedCommands.registerCommand(
 			"depotShimmy",
-			Commands.deadline(
-				Commands.waitSeconds(AutoConstants.kShimmySecs),
-				shimmy(),
-				intakeArm.setAngle(Degrees.of(AutoConstants.kArmDownDeg)),
-				intake.set(AutoConstants.kIntakeDutyCycle)
-			)
+			Commands.deadline(Commands.waitSeconds(AutoConstants.kShimmySecs), shimmy(), intakeDownRun())
 		);
 	}
 
-	/** Drive forward/back a little (robot relative) so balls settle into the spindexer. Never ends. */
+	/**
+	 * Every kJigglePauseSecs, one quick bump forward then back (robot relative) so balls settle into the spindexer.
+	 * Sits still in between so the turret can stay on target. Never ends.
+	 */
 	private Command jiggle() {
 		return Commands.repeatingSequence(
+			Commands.waitSeconds(AutoConstants.kJigglePauseSecs),
 			Commands.run(
 				() -> drivebase.drive(new ChassisSpeeds(AutoConstants.kJiggleSpeedMps, 0, 0)),
 				drivebase
@@ -266,8 +260,36 @@ public class RobotContainer {
 			Commands.run(
 				() -> drivebase.drive(new ChassisSpeeds(-AutoConstants.kJiggleSpeedMps, 0, 0)),
 				drivebase
-			).withTimeout(AutoConstants.kJiggleHalfPeriodSecs)
+			).withTimeout(AutoConstants.kJiggleHalfPeriodSecs),
+			Commands.runOnce(() -> drivebase.drive(new ChassisSpeeds()), drivebase)
 		).finallyDo(() -> drivebase.drive(new ChassisSpeeds()));
+	}
+
+	/**
+	 * Arm down, then let it rest, with the roller on. Never ends. When it ends, stops the roller and relaxes the arm.
+	 *
+	 * <p>Inside an auto, the auto owns the subsystems, so default commands (which normally stop things) don't run, and
+	 * a finished YAMS command leaves its last output on. That's why things kept running, so stop them here.
+	 */
+	private Command intakeDownRun() {
+		return Commands.parallel(
+			intakeArm
+				.runToAngle(Degrees.of(AutoConstants.kArmDownDeg), Degrees.of(AutoConstants.kArmToleranceDeg))
+				.withTimeout(AutoConstants.kArmDropSecs)
+				.andThen(Commands.run(intakeArm::relax, intakeArm)),
+			intake.set(AutoConstants.kIntakeDutyCycle)
+		).finallyDo(() -> {
+			intake.stopNow();
+			intakeArm.relax();
+		});
+	}
+
+	/** Stop feeding and the flywheel (autos don't run the default commands that normally do this). */
+	private void stopShooting() {
+		spindexer.stopNow();
+		kicker.stopNow();
+		intake.stopNow();
+		shooter.stopNow();
 	}
 
 	/** Strafe left/right (robot relative) while pushing forward a little. Never ends. */
@@ -291,12 +313,12 @@ public class RobotContainer {
 			spindexer.set(AutoConstants.kSpindexerFeedDutyCycle),
 			kicker.set(AutoConstants.kKickerFeedDutyCycle),
 			intake.set(AutoConstants.kIntakeDutyCycle), // keep pushing balls up into the spindexer
-			jiggle()
+			AutoConstants.kJiggleWhileShooting ? jiggle() : Commands.none()
 		).withTimeout(feedSecs);
 		return Commands.deadline(
 			Commands.waitUntil(aim::isReady).withTimeout(AutoConstants.kReadyTimeoutSecs).andThen(feed),
 			aim
-		);
+		).finallyDo(this::stopShooting);
 	}
 
 	/**
