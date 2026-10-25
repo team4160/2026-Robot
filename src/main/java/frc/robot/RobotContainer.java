@@ -41,6 +41,7 @@ import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.SpindexerSubsystem;
 import frc.robot.subsystems.SwerveSubsystem;
 import frc.robot.subsystems.TurretSubsystem;
+import frc.robot.utils.CanHealth;
 import frc.robot.utils.EqualsUtil;
 import java.io.File;
 import swervelib.SwerveInputStream;
@@ -72,6 +73,9 @@ public class RobotContainer {
 	private final IntakeArmSubsystem intakeArm = new IntakeArmSubsystem();
 	private final KickerSubsystem kicker = new KickerSubsystem();
 	private final SpindexerSubsystem spindexer = new SpindexerSubsystem();
+
+	// Dashboard lights for every CAN device (CAN/...), to find where the CAN chain breaks
+	private final CanHealth canHealth = new CanHealth();
 
 	// final ScoringSystem scoringSystem = new ScoringSystem(
 	// 	shooter,

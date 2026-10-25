@@ -211,9 +211,13 @@ public class ShootOnTheMoveCommand extends ParallelCommandGroup {
 			: MathUtil.inputModulus(rawDeg - lastAimDeg, -180, 180) / ShotingOnTheFlyConstants.loopPeriodSecs;
 		lastAimDeg = rawDeg;
 		double smoothedRate = turretRateFilter.calculate(rateDegPerSec);
-		aimDeg = clampToTurretRange(rawDeg);
-		double leadSecs = SmartDashboard.getNumber("SOTM/TurretLeadSecs", ShotingOnTheFlyConstants.kTurretLeadSecs);
-		turretSetpointDeg = clampToTurretRange(rawDeg + smoothedRate * leadSecs);
+		if (turretReachable) {
+			aimDeg = clampToTurretRange(rawDeg);
+			double leadSecs = SmartDashboard.getNumber("SOTM/TurretLeadSecs", ShotingOnTheFlyConstants.kTurretLeadSecs);
+			turretSetpointDeg = clampToTurretRange(rawDeg + smoothedRate * leadSecs);
+		}
+		// Out of reach: HOLD the last setpoint. (It used to jump to the nearest limit, which flipped between the two
+		// limits near the middle of the dead zone and swung the turret ~190 deg back and forth, yanking the CAN wires.)
 
 		inRange = passing
 			? distance >= passMinDistance && distance <= passMaxDistance
@@ -227,7 +231,7 @@ public class ShootOnTheMoveCommand extends ParallelCommandGroup {
 		} else {
 			hoodSetpointDeg = MathUtil.clamp(
 				hoodDegMap.get(distance) +
-				SmartDashboard.getNumber("SOTM/HoodOffsetDeg", ShotingOnTheFlyConstants.kHoodOffsetDeg),
+					SmartDashboard.getNumber("SOTM/HoodOffsetDeg", ShotingOnTheFlyConstants.kHoodOffsetDeg),
 				1.0,
 				35.0
 			);
@@ -289,6 +293,9 @@ public class ShootOnTheMoveCommand extends ParallelCommandGroup {
 	private void resetLead() {
 		lastAimDeg = Double.NaN;
 		turretRateFilter.reset();
+		// Start from where the turret is now, so an out-of-reach hub at the start doesn't use an old setpoint
+		turretSetpointDeg = turret.getRawAngle().in(Degrees);
+		aimDeg = turretSetpointDeg;
 	}
 
 	/** Compared against the real aim angle, not the led setpoint, so the lead doesn't block Ready. */

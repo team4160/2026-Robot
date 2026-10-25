@@ -17,6 +17,7 @@ import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.util.DriveFeedforwards;
 import com.pathplanner.lib.util.swerve.SwerveSetpoint;
 import com.pathplanner.lib.util.swerve.SwerveSetpointGenerator;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -29,6 +30,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -147,10 +149,48 @@ public class SwerveSubsystem extends SubsystemBase {
 			if (Timer.getFPGATimestamp() > ignoreVisionUntil) {
 				vision.updatePoseEstimation(swerveDrive);
 			}
-			System.out.println("Distance to tag 14 " + vision.getDistanceFromAprilTag(14));
 		}
 		SwerveState.CurrentPose = swerveDrive.getPose();
 		SwerveState.CurrentSpeeds = swerveDrive.getRobotVelocity();
+		checkGyro();
+	}
+
+	// Gyro check: the navX3 is on the CAN bus. If CAN breaks, its heading freezes while the robot keeps turning
+	// (heading "stuck pointing at the alliance wall"). Compare how much the WHEELS say we turned vs the GYRO.
+	private double gyroCheckWheelDeg = 0;
+	private double gyroCheckGyroDeg = 0;
+	private double gyroCheckLastYaw = Double.NaN;
+	private boolean gyroOk = true;
+
+	private void checkGyro() {
+		double dt = 0.02;
+		double wheelOmegaDeg = Math.toDegrees(Math.abs(swerveDrive.getRobotVelocity().omegaRadiansPerSecond));
+		double yaw = swerveDrive.getYaw().getDegrees();
+		double gyroStep = Double.isNaN(gyroCheckLastYaw)
+			? 0
+			: Math.abs(MathUtil.inputModulus(yaw - gyroCheckLastYaw, -180, 180));
+		gyroCheckLastYaw = yaw;
+		if (wheelOmegaDeg > 45) {
+			// only judge while clearly rotating
+			gyroCheckWheelDeg += wheelOmegaDeg * dt;
+			gyroCheckGyroDeg += gyroStep;
+		}
+		if (gyroCheckWheelDeg > 45) {
+			// wheels say we turned 45 deg: did the gyro see it?
+			boolean ok = gyroCheckGyroDeg > 9;
+			if (ok != gyroOk) System.out.println(
+				"[GYRO] " +
+					(ok ? "OK again" : "NOT changing while the robot turns (CAN/navX lost?)") +
+					" at " +
+					String.format("%.1f", Timer.getFPGATimestamp()) +
+					"s"
+			);
+			gyroOk = ok;
+			gyroCheckWheelDeg = 0;
+			gyroCheckGyroDeg = 0;
+		}
+		SmartDashboard.putBoolean("Swerve/GyroOK", gyroOk);
+		SmartDashboard.putNumber("Swerve/GyroYawDeg", yaw);
 	}
 
 	@Override
