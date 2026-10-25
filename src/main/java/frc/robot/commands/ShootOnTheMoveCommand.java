@@ -97,6 +97,7 @@ public class ShootOnTheMoveCommand extends ParallelCommandGroup {
 	private boolean inRange = false;
 	private boolean turretReachable = false;
 	private boolean passing = false; // true = in the neutral zone, lobbing to our alliance zone instead of the hub
+	private boolean passMaxed = false;
 
 	// Turret lead: estimate how fast the aim angle is changing and point a little ahead of it
 	private final LinearFilter turretRateFilter = LinearFilter.movingAverage(5);
@@ -222,12 +223,16 @@ public class ShootOnTheMoveCommand extends ParallelCommandGroup {
 		inRange = passing
 			? distance >= passMinDistance && distance <= passMaxDistance
 			: distance >= minDistance && distance <= maxDistance;
+
+		passMaxed = false;
 		if (SmartDashboard.getBoolean("SOTM/TuningMode", false)) {
 			hoodSetpointDeg = SmartDashboard.getNumber("SOTM/TuningHoodDeg", 23);
 			flywheelSetpointRPM = SmartDashboard.getNumber("SOTM/TuningRPM", 4000);
 		} else if (passing) {
 			hoodSetpointDeg = passHoodDegMap.get(distance);
-			flywheelSetpointRPM = passRPMMap.get(distance);
+			double wantedRPM = passRPMMap.get(distance);
+			flywheelSetpointRPM = Math.min(wantedRPM, ShotingOnTheFlyConstants.kFlywheelMaxRPM);
+			passMaxed = wantedRPM > ShotingOnTheFlyConstants.kFlywheelMaxRPM;
 		} else {
 			hoodSetpointDeg = MathUtil.clamp(
 				hoodDegMap.get(distance) +
@@ -258,6 +263,7 @@ public class ShootOnTheMoveCommand extends ParallelCommandGroup {
 		SmartDashboard.putBoolean("SOTM/FlywheelAtSpeed", flywheelAtSpeed());
 		SmartDashboard.putBoolean("SOTM/Ready", isReady());
 		SmartDashboard.putBoolean("SOTM/Passing", passing);
+		SmartDashboard.putNumber("SOTM/FlywheelActualRPM", shooter.getVelocity().in(RPM));
 		drivebase.getSwerveDrive().field.getObject("SOTM/AimPoint").setPose(new Pose2d(virtualPos, fieldAim));
 		drivebase.getSwerveDrive().field.getObject("SOTM/Target").setPose(new Pose2d(target, Rotation2d.kZero));
 	}
@@ -332,6 +338,10 @@ public class ShootOnTheMoveCommand extends ParallelCommandGroup {
 	/** True when a valid solution exists and every mechanism is close enough to fire. */
 	public boolean isReady() {
 		return isRunning() && inRange && turretReachable && turretOnTarget() && hoodOnTarget() && flywheelAtSpeed();
+	}
+
+	public boolean isPassMaxed() {
+		return passMaxed;
 	}
 
 	/** Operator nudge: add RPM to every table shot (negative = less). Shared by all SOTM commands; resets on reboot. */

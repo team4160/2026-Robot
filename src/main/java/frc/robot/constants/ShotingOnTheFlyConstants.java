@@ -17,7 +17,7 @@ public class ShotingOnTheFlyConstants {
 		Inches.of(16.945).in(Meters),
 		new Rotation3d(0, 0, Math.PI)
 	);
-
+	//public static final double kFlywheel
 	public static final double loopPeriodSecs = 0.02;
 
 	/**
@@ -25,6 +25,7 @@ public class ShotingOnTheFlyConstants {
 	 * (180 aimed exactly opposite the hub on the first test).
 	 */
 	public static final double kTurretZeroOffsetDeg = 0.0;
+	public static final double kFlywheelMaxRPM = 6500.0;
 
 	/**
 	 * Small aim correction (deg). Live-tune with "SOTM/TurretTrimDeg" on the dashboard, then copy the value here so it
@@ -139,6 +140,7 @@ public class ShotingOnTheFlyConstants {
 	 * land short/long at every distance, nudge all RPMs together. Keep rows sorted and hood within 1-35 deg.
 	 */
 	public static final double[][] kPassTable = {
+		{ 1.5, 2150, 30.0, 0.81 },
 		{ 2.0, 2550, 30.0, 0.92 }, // estimate
 		{ 2.5, 2850, 30.0, 1.01 }, // estimate
 		{ 3.0, 3150, 30.0, 1.10 }, // estimate
@@ -146,6 +148,13 @@ public class ShotingOnTheFlyConstants {
 		{ 5.0, 4200, 30.0, 1.39 }, // estimate
 		{ 6.0, 4700, 30.0, 1.52 }, // estimate
 		{ 7.0, 5150, 30.0, 1.63 }, // estimate
+		{ 8.0, 5400, 35.0, 1.65 },
+		{ 9.0, 5800, 35.0, 1.75 },
+		{ 10.0, 6150, 35.0, 1.84 },
+		{ 11.0, 6550, 35.0, 1.92 },
+		{ 12.0, 6900, 35.0, 2.01 },
+		{ 13.0, 7250, 35.0, 2.09 },
+		{ 14.0, 7600, 35.0, 2.17 },
 	};
 
 	/**

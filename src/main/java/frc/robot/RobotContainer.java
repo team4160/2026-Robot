@@ -411,8 +411,8 @@ public class RobotContainer {
 		shootOnTheMove
 			.readyTrigger()
 			.whileTrue(
-				Commands.startEnd(
-					() -> operatorXbox.setRumble(RumbleType.kBothRumble, 0.4),
+				Commands.runEnd(
+					() -> operatorXbox.setRumble(RumbleType.kBothRumble, shootOnTheMove.isPassMaxed() ? 1.0 : 4.0),
 					() -> operatorXbox.setRumble(RumbleType.kBothRumble, 0)
 				)
 			);
